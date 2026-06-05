@@ -1,5 +1,8 @@
 #include "render.h"
 #include <GL/glew.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #define _USE_MATH_DEFINES
 #include <cmath>
@@ -12,10 +15,11 @@ GLuint create_program()
 
     const char* vshader_src =
         "#version 330 core\n"
+        "uniform mat4 u_mvp;\n"
         "layout(location=0) in vec3 pos;\n"
         "void main()"
         "{"
-        "    gl_Position=vec4(pos,1.0);"
+        "    gl_Position=u_mvp * vec4(pos,1.0);"
         "}";
 
     const char* fshader_src =
@@ -168,13 +172,17 @@ RenderData create_cube(float size)
     return renderData;
 }
 
+glm::mat4 mvp;
+
 SceneContext setup_scene()
 {
     SceneContext context;
     context.prog = create_program();
-    context.renderData = create_sphere(0.2f, 20, 20);
+    context.renderData = create_cube(0.4f);
+    context.u_mvp = glGetUniformLocation(context.prog, "u_mvp");
 
-    std::cout << "sphere = 0.2" << std::endl;
+    mvp = glm::mat4(1.0f);
+
     return context;
 }
 
@@ -184,6 +192,10 @@ void draw_scene(const SceneContext& context)
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(context.prog);
+
+    mvp = glm::rotate(mvp, float(glm::radians(1.0f)), glm::vec3(1.0f, 1.0f, 0.0f)); // Rotate over time
+
+    glUniformMatrix4fv(context.u_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
 
     glBindVertexArray(context.renderData.VAO);
     glDrawArrays(GL_TRIANGLES, 0, context.renderData.vertexCount);

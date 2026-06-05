@@ -17,6 +17,11 @@ if (WIN32)
         PATHS ${GLFW_ROOT}/include
     )
 
+    find_path(GLM_INCLUDE_DIR
+        NAMES glm/glm.hpp
+        PATHS D:/DevCode/SDK/glm
+    )
+
     find_library(GLEW_LIBRARIES
         NAMES glew32s
         PATHS ${GLEW_ROOT}/lib
@@ -28,10 +33,9 @@ if (WIN32)
     )
 
 elseif (APPLE AND CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    #list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew" "/usr/local")
-
     find_package(GLEW REQUIRED)
     find_package(GLFW3 REQUIRED)
+    find_package(glm REQUIRED)
 
     set(GLEW_LIBRARIES GLEW::GLEW)
     set(GLFW3_LIBRARIES glfw)
@@ -49,6 +53,7 @@ target_include_directories(OpenGLStudy
     PRIVATE 
     ${GLEW_INCLUDE_DIR}
     ${GLFW3_INCLUDE_DIR}
+    ${GLM_INCLUDE_DIR}
     ${OPENGL_INCLUDE_DIR}
 )
 
