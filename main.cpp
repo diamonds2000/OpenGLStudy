@@ -1,5 +1,8 @@
+#include <glew.h>
 #include <GLFW/glfw3.h>
 #include "render.h"
+#include <iostream>
+
 
 int main()
 {
@@ -20,11 +23,21 @@ int main()
 
     glfwMakeContextCurrent(window);
 
+    GLenum err = glewInit();
+    if (err != GLEW_OK)
+    {
+        std::cerr << "glew init err:" << glewGetErrorString(err) << std::endl;
+        return -1;
+    }
+
+    SceneContext context = setup_scene();
+
     while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT);
 
         // Render OpenGL here
+        draw_scene(context);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
