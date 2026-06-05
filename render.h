@@ -1,7 +1,7 @@
 #ifndef RENDER_H
 #define RENDER_H
 
-#include <glew.h>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 struct RenderData {

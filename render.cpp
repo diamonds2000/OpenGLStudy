@@ -1,5 +1,5 @@
 #include "render.h"
-#include <glew.h>
+#include <GL/glew.h>
 
 #define _USE_MATH_DEFINES
 #include <cmath>
