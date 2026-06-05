@@ -77,31 +77,62 @@ RenderData create_triangle()
 
 RenderData create_sphere(float radius, int slices, int stacks)
 {
-    float* vertices = new float[slices * stacks * 3];
+    // Each quad on the sphere surface produces 2 triangles = 6 vertices
+    float* vertices = new float[slices * stacks * 6 * 3];
     int index = 0;
 
-    // create vertices for the sphere
-    for (int i = 0; i <= stacks; ++i)
+    for (int i = 0; i < stacks; ++i)
     {
-        float V = (float)i / stacks;
-        float phi = V * M_PI;
+        float V0 = (float)i / stacks;
+        float V1 = (float)(i + 1) / stacks;
+        float phi0 = V0 * M_PI;
+        float phi1 = V1 * M_PI;
 
-        for (int j = 0; j <= slices; ++j)
+        for (int j = 0; j < slices; ++j)
         {
-            float U = (float)j / slices;
-            float theta = U * (M_PI * 2);
+            float U0 = (float)j / slices;
+            float U1 = (float)(j + 1) / slices;
+            float theta0 = U0 * (M_PI * 2);
+            float theta1 = U1 * (M_PI * 2);
 
-            float x = radius * cos(theta) * sin(phi);
-            float y = radius * cos(phi);
-            float z = radius * sin(theta) * sin(phi);
+            // Four corners of the current quad
+            // v0 -- v1   (top row: i)
+            //  |     |
+            // v2 -- v3   (bottom row: i+1)
 
-            vertices[index++] = x;
-            vertices[index++] = y;
-            vertices[index++] = z;
+            // v0: top-left  (i, j)
+            float x0 = radius * cos(theta0) * sin(phi0);
+            float y0 = radius * cos(phi0);
+            float z0 = radius * sin(theta0) * sin(phi0);
+
+            // v1: top-right (i, j+1)
+            float x1 = radius * cos(theta1) * sin(phi0);
+            float y1 = radius * cos(phi0);
+            float z1 = radius * sin(theta1) * sin(phi0);
+
+            // v2: bottom-left  (i+1, j)
+            float x2 = radius * cos(theta0) * sin(phi1);
+            float y2 = radius * cos(phi1);
+            float z2 = radius * sin(theta0) * sin(phi1);
+
+            // v3: bottom-right (i+1, j+1)
+            float x3 = radius * cos(theta1) * sin(phi1);
+            float y3 = radius * cos(phi1);
+            float z3 = radius * sin(theta1) * sin(phi1);
+
+            // Triangle 1: v0, v1, v3
+            vertices[index++] = x0; vertices[index++] = y0; vertices[index++] = z0;
+            vertices[index++] = x1; vertices[index++] = y1; vertices[index++] = z1;
+            vertices[index++] = x3; vertices[index++] = y3; vertices[index++] = z3;
+
+            // Triangle 2: v0, v3, v2
+            vertices[index++] = x0; vertices[index++] = y0; vertices[index++] = z0;
+            vertices[index++] = x3; vertices[index++] = y3; vertices[index++] = z3;
+            vertices[index++] = x2; vertices[index++] = y2; vertices[index++] = z2;
         }
     }
 
-    RenderData renderData = create_render_data(vertices, slices * stacks);
+    RenderData renderData = create_render_data(vertices, slices * stacks * 6);
 
     delete[] vertices;
     return renderData;
@@ -109,9 +140,6 @@ RenderData create_sphere(float radius, int slices, int stacks)
 
 RenderData create_cube(float size)
 {
-    float* vertices = new float[36 * 3]; // 6 faces * 2 triangles * 3 vertices
-    int index = 0;
-
     // create vertices for the cube
     float half = size / 2.0f;
     float cubeVertices[36][3] =
@@ -135,9 +163,8 @@ RenderData create_cube(float size)
         {0.0f * size, half, half}, {half, half, -half}, {half, -half, -half}
     };
 
-    RenderData renderData = create_render_data(vertices, 36);
+    RenderData renderData = create_render_data((float*)&cubeVertices, 36);
 
-    delete[] vertices;
     return renderData;
 }
 
@@ -145,9 +172,9 @@ SceneContext setup_scene()
 {
     SceneContext context;
     context.prog = create_program();
-    context.renderData = create_triangle();
+    context.renderData = create_sphere(0.2f, 20, 20);
 
-    std::cout << "cube = 0.4" << std::endl;
+    std::cout << "sphere = 0.2" << std::endl;
     return context;
 }
 
