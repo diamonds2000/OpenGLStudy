@@ -43,7 +43,7 @@ GLuint create_program()
         "in vec3 mv_normal;"
         "in vec3 mv_light_dir;"
         "out vec4 color;"
-        "const vec3 ka = vec3(0.1, 0.1, 0.1);"
+        "const vec3 ka = vec3(0.3, 0.3, 0.3);"
         "const vec3 kd = vec3(0.8, 0.8, 0.8);"
         "const vec3 ks = vec3(0.5, 0.5, 0.5);"
         "const float shine = 32.0;"
@@ -319,7 +319,7 @@ void draw_scene(const SceneContext& context)
 {
     //glUseProgram(context.prog);
 
-    //mvMatrix = glm::rotate(mvMatrix, float(glm::radians(1.0f)), glm::vec3(1.0f, 1.0f, 0.0f)); // Rotate over time
+    mvMatrix = glm::rotate(mvMatrix, float(glm::radians(1.0f)), glm::vec3(1.0f, 1.0f, 0.0f)); // Rotate over time
 
     glUniformMatrix4fv(context.u_mvp, 1, GL_FALSE, glm::value_ptr(mvMatrix));
     glUniformMatrix4fv(context.u_mv, 1, GL_FALSE, glm::value_ptr(mvMatrix));
