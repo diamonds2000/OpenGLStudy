@@ -13,6 +13,8 @@ struct RenderData {
 struct SceneContext {
     GLuint prog;
     GLint u_mvp;
+    GLint u_mv;
+    GLint u_light_dir;
     RenderData renderData;
 };
 
