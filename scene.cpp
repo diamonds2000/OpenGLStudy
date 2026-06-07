@@ -14,10 +14,23 @@ RenderData create_geometries_instances()
     RenderData baseData = create_cube(0.4f);
 
     std::vector<glm::mat4> matrices;
-    for (int i = 0; i < 10; ++i)
+    matrices.reserve(10000);
+
+    int gridDim = 22; // 22^3 = 10648 ≈ 10000
+    float spacing = 0.8f;
+    float offset = (gridDim - 1) * spacing * 0.5f;
+
+    for (int i = 0; i < gridDim; ++i)
     {
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(i * 0.5f, 0.0f, 0.0f));
-        matrices.push_back(model);
+        for (int j = 0; j < gridDim; ++j)
+        {
+            for (int k = 0; k < gridDim; ++k)
+            {
+                glm::vec3 pos(i * spacing - offset, j * spacing - offset, k * spacing - offset);
+                glm::mat4 model = glm::translate(glm::mat4(1.0f), pos);
+                matrices.push_back(model);
+            }
+        }
     }
     return create_geometry_instances(baseData, matrices);
 }
@@ -45,7 +58,7 @@ SceneContext setup_scene()
     //context.view = glm::rotate(viewMatrix, float(glm::radians(30.0f)), glm::vec3(1.0f, 1.0f, 0.0f));
     context.projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 0.1f, 100.0f);
 
-    glm::vec3 eye(0.0f, 0.0f, 5.0f);
+    glm::vec3 eye(12.0f, 10.0f, 50.0f);
     glm::vec3 center(0.0f, 0.0f, 0.0f);
     glm::vec3 up(0.0f, 1.0f, 0.0f);
     context.view = glm::lookAt(eye, center, up);
