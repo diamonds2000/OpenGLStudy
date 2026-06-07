@@ -70,7 +70,7 @@ void draw_scene(SceneContext& context)
 {
     //glUseProgram(context.prog);
     
-    context.view = glm::rotate(context.view, float(glm::radians(1.0f)), glm::vec3(1.0f, 1.0f, 0.0f)); // Rotate over time
+    //context.view = glm::rotate(context.view, float(glm::radians(1.0f)), glm::vec3(1.0f, 1.0f, 0.0f)); // Rotate over time
 
     glUniformMatrix4fv(context.u_mvp, 1, GL_FALSE, glm::value_ptr(context.projection * context.view));
     glUniformMatrix4fv(context.u_view, 1, GL_FALSE, glm::value_ptr(context.view));
