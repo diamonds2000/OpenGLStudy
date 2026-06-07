@@ -11,7 +11,7 @@ struct SceneContext {
     GLint u_light_dir = 0;
     glm::mat4 projection = glm::mat4(1.0f);
     glm::mat4 view = glm::mat4(1.0f);
-    RenderData renderData;
+    std::vector<RenderData> renderDatas;
 };
 
 SceneContext setup_scene();
