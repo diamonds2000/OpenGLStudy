@@ -17,27 +17,28 @@ GLuint create_program()
     const char* vshader_src =
         "#version 330 core\n"
         "uniform mat4 u_mvp;"
-        "uniform mat4 u_mv;"
+        "uniform mat4 u_view;"
         "uniform vec3 u_color;"
         "uniform vec3 u_light_dir;"
         "out vec3 mv_pos;"
         "out vec3 mv_normal;"
         "out vec3 mv_light_dir;"
         "out vec3 v_color;"
-        "layout(location=0) in vec3 pos;\n"
-        "layout(location=1) in vec3 normal;\n"
+        "layout(location=0) in vec3 pos;"
+        "layout(location=1) in vec3 normal;"
+        "layout(location=2) in mat4 instance_model;"
         "void main()"
         "{"
-        "    gl_Position = u_mvp * vec4(pos,1.0);"
-        "    mv_pos = (u_mv * vec4(pos, 1.0)).xyz;"
-        "    mv_normal = (u_mv * vec4(normal, 0.0)).xyz;"
-        "    mv_light_dir = normalize(u_mv * vec4(u_light_dir, 0.0)).xyz;"
+        "    gl_Position = u_mvp * instance_model * vec4(pos,1.0);"
+        "    mv_pos = (u_view * instance_model * vec4(pos, 1.0)).xyz;"
+        "    mv_normal = (u_view * instance_model * vec4(normal, 0.0)).xyz;"
+        "    mv_light_dir = normalize(u_view * vec4(u_light_dir, 0.0)).xyz;"
         "    v_color = u_color;"
         "}";
 
     const char* fshader_src =
         "#version 330 core\n"
-        "uniform vec3 light_color;"
+        "uniform vec3 u_light_color;"
         "in vec3 v_color;"
         "in vec3 mv_pos;"
         "in vec3 mv_normal;"
@@ -53,11 +54,11 @@ GLuint create_program()
         "    vec3 L = normalize(mv_light_dir);"
         "    vec3 V = normalize(-mv_pos);"
         "    vec3 R = reflect(-L, N);"
-        "    vec3 amb = ka * light_color;"
+        "    vec3 amb = ka * u_light_color;"
         "    float diff = max(dot(N,L),0.0);"
-        "    vec3 dif = diff * kd * light_color;"
+        "    vec3 dif = diff * kd * u_light_color;"
         "    float spec = diff > 0.0 ? pow(max(dot(R, V), 0.0), shine) : 0.0;"
-        "    vec3 spe = spec * ks * light_color;"
+        "    vec3 spe = spec * ks * u_light_color;"
         "    color = vec4(amb + dif + spe, 1.0);"
         "}";
 
@@ -93,6 +94,16 @@ GLuint create_program()
     glAttachShader(prog, vs);
     glAttachShader(prog, fs);
     glLinkProgram(prog);
+    glGetProgramiv(prog, GL_LINK_STATUS, &ok);
+    if (!ok)    {
+        GLint len;
+        glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &len);
+        char* log = new char[len];
+        glGetProgramInfoLog(prog, len, nullptr, log);
+        std::cerr << "Shader program linking failed:\n" << log << std::endl;
+        delete[] log;
+    }
+
     glDeleteShader(vs);
     glDeleteShader(fs);
 
@@ -123,10 +134,10 @@ RenderData create_render_data(float* vertices, float* normals, int count)
     renderData.vertexCount = count;
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(0);  // slot 0: position
 
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(1);  // slot 1: normal
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -288,42 +299,32 @@ RenderData create_cube(float size)
     return renderData;
 }
 
-glm::mat4 mvMatrix;
-
-SceneContext setup_scene()
+RenderData create_geometry_instances(const RenderData& baseData, const std::vector<glm::mat4>& instanceMatrices)
 {
-    SceneContext context;
-    context.prog = create_program();
-    context.renderData = create_cube(0.4f);
-    context.u_mvp = glGetUniformLocation(context.prog, "u_mvp");
-    context.u_mv = glGetUniformLocation(context.prog, "u_mv");
+    RenderData renderData;
 
-    GLuint u_color = glGetUniformLocation(context.prog, "u_color");
-    GLuint u_lightDir = glGetUniformLocation(context.prog, "u_light_dir");
-    GLuint u_lightColor = glGetUniformLocation(context.prog, "light_color");
+    GLuint instanceVBO;
+    glGenBuffers(1, &instanceVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferData(GL_ARRAY_BUFFER, instanceMatrices.size()*sizeof(glm::mat4), instanceMatrices.data(), GL_STATIC_DRAW);
 
-    glUseProgram(context.prog);
-    glUniform3f(u_color, 1.0f, 0.5f, 0.2f);
-    glUniform3f(u_lightDir, 0.5f, 1.0f, 0.3f);
-    glUniform3f(u_lightColor, 1.0f, 1.0f, 1.0f);
+    glBindVertexArray(baseData.VAO);
+    {
+        GLuint attrLoc = 2; // shader layout start (location=2) mat4 model;
+        for(int i = 0; i < 4; i++)
+        {
+            glVertexAttribPointer(attrLoc+i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*)(i*sizeof(glm::vec4)));
+            glEnableVertexAttribArray(attrLoc+i);
+            glVertexAttribDivisor(attrLoc+i,1);
+        }
+    }
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    //glEnable(GL_DEPTH_TEST);
+    renderData.VBO = instanceVBO;
+    renderData.VAO = baseData.VAO;
+    renderData.vertexCount = baseData.vertexCount;
+    renderData.instanceCount = instanceMatrices.size();
 
-    mvMatrix = glm::mat4(1.0f);
-    //mvMatrix = glm::rotate(mvMatrix, float(glm::radians(30.0f)), glm::vec3(1.0f, 1.0f, 0.0f));
-
-    return context;
-}
-
-void draw_scene(const SceneContext& context)
-{
-    //glUseProgram(context.prog);
-
-    mvMatrix = glm::rotate(mvMatrix, float(glm::radians(1.0f)), glm::vec3(1.0f, 1.0f, 0.0f)); // Rotate over time
-
-    glUniformMatrix4fv(context.u_mvp, 1, GL_FALSE, glm::value_ptr(mvMatrix));
-    glUniformMatrix4fv(context.u_mv, 1, GL_FALSE, glm::value_ptr(mvMatrix));
-
-    glBindVertexArray(context.renderData.VAO);
-    glDrawArrays(GL_TRIANGLES, 0, context.renderData.vertexCount);
+    return renderData;
 }

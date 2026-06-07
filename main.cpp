@@ -1,6 +1,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "render.h"
+#include "scene.h"
 #include <iostream>
 
 
@@ -36,8 +37,6 @@ int main()
     {
         glClearColor(0.2f, 0.3f, 0.3f, 1.f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glEnable(GL_DEPTH_TEST);
 
         // Render OpenGL here
         draw_scene(context);
