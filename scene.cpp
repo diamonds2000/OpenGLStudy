@@ -66,7 +66,7 @@ RenderData create_geometries_instances()
         glm::vec4(1.0f, 0.0f, 1.0f, 1.0f)  // MAGENTA
     };
 
-    int gridDim = 5; // 22^3 = 10648 ≈ 10000
+    int gridDim = 10; // 22^3 = 10648 ≈ 10000
     float spacing = 0.8f;
     float offset = (gridDim - 1) * spacing * 0.5f;
 
@@ -125,6 +125,7 @@ SceneContext setup_scene()
     //context.renderDatas = create_geometries();
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
 
     return context;
 }
