@@ -107,7 +107,7 @@ int main()
     SceneContext context = setup_scene();
 
     // Off-screen performance test (pure GPU, no vsync)
-    performance_test_offscreen(context, 800, 600, 1000);
+    //performance_test_offscreen(context, 800, 600, 1000);
 
     // Set up camera controls
     glfwSetWindowUserPointer(window, &context);

@@ -41,7 +41,10 @@ std::vector<RenderData> create_geometries()
 
 RenderData create_geometries_instances()
 {
-    RenderData baseData = create_cube(0.4f);
+    //RenderData baseData = create_cube(0.4f);
+    RenderData baseData = create_bunny("../models/bunny.obj");
+
+    glm::mat4 model_scale = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f));
 
     std::vector<glm::mat4> matrices;
     matrices.reserve(10000);
@@ -63,7 +66,7 @@ RenderData create_geometries_instances()
         glm::vec4(1.0f, 0.0f, 1.0f, 1.0f)  // MAGENTA
     };
 
-    int gridDim = 22; // 22^3 = 10648 ≈ 10000
+    int gridDim = 5; // 22^3 = 10648 ≈ 10000
     float spacing = 0.8f;
     float offset = (gridDim - 1) * spacing * 0.5f;
 
@@ -75,7 +78,7 @@ RenderData create_geometries_instances()
             {
                 glm::vec3 pos(i * spacing - offset, j * spacing - offset, k * spacing - offset);
                 glm::mat4 model = glm::translate(glm::mat4(1.0f), pos);
-                matrices.push_back(model);
+                matrices.push_back(model * model_scale);
                 colors.push_back(colorValues[k % 6]); // Cycle through the color values
             }
         }

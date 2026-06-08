@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include "model_loader.h"
 
 #define _USE_MATH_DEFINES
 #include <math.h>
@@ -249,6 +250,14 @@ RenderData create_cube(float size)
     RenderData renderData = create_render_data((float*)&cubeVertices, (float*)&cubeNormals, 36);
 
     return renderData;
+}
+
+// ---------------------------------------------------------------------------
+// Convenience: Stanford Bunny
+// ---------------------------------------------------------------------------
+RenderData create_bunny(const std::string& objPath)
+{
+    return create_from_obj(objPath);
 }
 
 RenderData create_geometry_instances(
