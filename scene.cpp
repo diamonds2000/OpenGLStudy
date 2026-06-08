@@ -126,6 +126,20 @@ SceneContext setup_scene()
     return context;
 }
 
+void update_view_from_camera(SceneContext& context)
+{
+    auto& cam = context.camera;
+    float yawRad = glm::radians(cam.yaw);
+    float pitchRad = glm::radians(cam.pitch);
+
+    glm::vec3 eye;
+    eye.x = cam.target.x + cam.distance * cos(pitchRad) * sin(yawRad);
+    eye.y = cam.target.y + cam.distance * sin(pitchRad);
+    eye.z = cam.target.z + cam.distance * cos(pitchRad) * cos(yawRad);
+
+    context.view = glm::lookAt(eye, cam.target, glm::vec3(0.0f, 1.0f, 0.0f));
+}
+
 void draw_scene(SceneContext& context)
 {
     //glUseProgram(context.prog);
