@@ -19,6 +19,9 @@ RenderData create_triangle();
 RenderData create_cube(float size);
 RenderData create_sphere(float radius, int slices, int stacks);
 
-RenderData create_geometry_instances(const RenderData& baseData, const std::vector<glm::mat4>& instanceMatrices);
+RenderData create_geometry_instances(
+    const RenderData& baseData, 
+    const std::vector<glm::mat4>& instanceMatrices,
+    const std::vector<glm::vec4>& instanceColors);
 
 #endif // RENDER_H

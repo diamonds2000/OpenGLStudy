@@ -63,6 +63,7 @@ const char* vshader_src2 =
         "layout(location=0) in vec3 pos;"
         "layout(location=1) in vec3 normal;"
         "layout(location=2) in mat4 instance_model;"
+        "layout(location=6) in vec3 color;"
         "void main()"
         "{"
         "    mat4 mv = u_view * instance_model;"
@@ -71,7 +72,7 @@ const char* vshader_src2 =
         "    mv_pos = view_pos.xyz;"
         "    mv_normal = (mv * vec4(normal, 0.0)).xyz;"
         "    mv_light_dir = normalize(mv * vec4(u_light_dir, 0.0)).xyz;"
-        "    v_color = u_color;"
+        "    v_color = color;"
         "}";
 
 const char* fshader_src2 =

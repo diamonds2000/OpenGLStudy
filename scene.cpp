@@ -46,6 +46,23 @@ RenderData create_geometries_instances()
     std::vector<glm::mat4> matrices;
     matrices.reserve(10000);
 
+    std::vector<glm::vec4> colors;
+    colors.reserve(10000);
+
+    enum color
+    {
+        RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA
+    };
+
+    const glm::vec4 colorValues[] = {
+        glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), // RED
+        glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), // GREEN
+        glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), // BLUE
+        glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), // YELLOW
+        glm::vec4(0.0f, 1.0f, 1.0f, 1.0f), // CYAN
+        glm::vec4(1.0f, 0.0f, 1.0f, 1.0f)  // MAGENTA
+    };
+
     int gridDim = 22; // 22^3 = 10648 ≈ 10000
     float spacing = 0.8f;
     float offset = (gridDim - 1) * spacing * 0.5f;
@@ -59,16 +76,25 @@ RenderData create_geometries_instances()
                 glm::vec3 pos(i * spacing - offset, j * spacing - offset, k * spacing - offset);
                 glm::mat4 model = glm::translate(glm::mat4(1.0f), pos);
                 matrices.push_back(model);
+                colors.push_back(colorValues[k % 6]); // Cycle through the color values
             }
         }
     }
-    return create_geometry_instances(baseData, matrices);
+    return create_geometry_instances(baseData, matrices, colors);
+}
+
+glm::mat4 get_isometric_view_matrix()
+{
+    glm::vec3 eye(12.0f, 10.0f, 50.0f);
+    glm::vec3 center(0.0f, 0.0f, 0.0f);
+    glm::vec3 up(0.0f, 1.0f, 0.0f);
+    return glm::lookAt(eye, center, up);
 }
 
 SceneContext setup_scene()
 {
     SceneContext context;
-    context.prog = create_program(vshader_src3, fshader_src3);
+    context.prog = create_program(vshader_src2, fshader_src2);
 
     //context.view = glm::rotate(viewMatrix, float(glm::radians(30.0f)), glm::vec3(1.0f, 1.0f, 0.0f));
     context.projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 0.1f, 100.0f);
@@ -92,8 +118,8 @@ SceneContext setup_scene()
     glUniform3f(u_lightColor, 1.0f, 1.0f, 1.0f);
     glUniformMatrix4fv(u_projection, 1, GL_FALSE, glm::value_ptr(context.projection));
 
-    //context.renderDatas.push_back(create_geometries_instances());
-    context.renderDatas = create_geometries();
+    context.renderDatas.push_back(create_geometries_instances());
+    //context.renderDatas = create_geometries();
 
     glEnable(GL_DEPTH_TEST);
 
@@ -111,24 +137,24 @@ void draw_scene(SceneContext& context)
 
     for (const auto& renderData : context.renderDatas)
     {
-        GLuint u_color = glGetUniformLocation(context.prog, "u_color");
-        if (u_color == -1)        {
-            std::cerr << "Uniform 'color' not found in shader!" << std::endl;
-            continue;
-        }
-        glUniform3f(u_color, 1.0f, 0.5f, 0.2f);
+        // GLuint u_color = glGetUniformLocation(context.prog, "u_color");
+        // if (u_color == -1)        {
+        //     std::cerr << "Uniform 'color' not found in shader!" << std::endl;
+        //     continue;
+        // }
+        // glUniform3f(u_color, 1.0f, 0.5f, 0.2f);
         
-        GLuint u_model = glGetUniformLocation(context.prog, "u_model");
-        if (u_model == -1)
-        {
-            std::cerr << "Uniform 'model' not found in shader!" << std::endl;
-            continue;
-        }
-        glUniformMatrix4fv(u_model, 1, GL_FALSE, glm::value_ptr(renderData.modelMatrix));
+        // GLuint u_model = glGetUniformLocation(context.prog, "u_model");
+        // if (u_model == -1)
+        // {
+        //     std::cerr << "Uniform 'model' not found in shader!" << std::endl;
+        //     continue;
+        // }
+        // glUniformMatrix4fv(u_model, 1, GL_FALSE, glm::value_ptr(renderData.modelMatrix));
 
         glBindVertexArray(renderData.VAO);
-        glDrawArrays(GL_TRIANGLES, 0, renderData.vertexCount);
-        //glDrawArraysInstanced(GL_TRIANGLES, 0, renderData.vertexCount, renderData.instanceCount);
+        //glDrawArrays(GL_TRIANGLES, 0, renderData.vertexCount);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, renderData.vertexCount, renderData.instanceCount);
         glBindVertexArray(0);
     }
 }

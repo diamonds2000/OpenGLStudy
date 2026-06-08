@@ -37,6 +37,8 @@ int main()
     // Off-screen performance test (pure GPU, no vsync)
     performance_test_offscreen(context, 800, 600, 1000);
 
+    context.view = get_isometric_view_matrix();
+
     while (!glfwWindowShouldClose(window))
     {
         glClearColor(0.2f, 0.3f, 0.3f, 1.f);

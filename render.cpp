@@ -251,17 +251,20 @@ RenderData create_cube(float size)
     return renderData;
 }
 
-RenderData create_geometry_instances(const RenderData& baseData, const std::vector<glm::mat4>& instanceMatrices)
+RenderData create_geometry_instances(
+    const RenderData& baseData, 
+    const std::vector<glm::mat4>& instanceMatrices,
+    const std::vector<glm::vec4>& instanceColors)
 {
     RenderData renderData;
 
-    GLuint instanceVBO;
-    glGenBuffers(1, &instanceVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, instanceMatrices.size()*sizeof(glm::mat4), instanceMatrices.data(), GL_STATIC_DRAW);
-
     glBindVertexArray(baseData.VAO);
     {
+        GLuint instancePosVBO;
+        glGenBuffers(1, &instancePosVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, instancePosVBO);
+        glBufferData(GL_ARRAY_BUFFER, instanceMatrices.size()*sizeof(glm::mat4), instanceMatrices.data(), GL_STATIC_DRAW);
+
         GLuint attrLoc = 2; // shader layout start (location=2) mat4 model;
         for(int i = 0; i < 4; i++)
         {
@@ -269,11 +272,23 @@ RenderData create_geometry_instances(const RenderData& baseData, const std::vect
             glEnableVertexAttribArray(attrLoc+i);
             glVertexAttribDivisor(attrLoc+i,1);
         }
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        GLuint instanceColorVBO;
+        glGenBuffers(1, &instanceColorVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, instanceColorVBO);
+        glBufferData(GL_ARRAY_BUFFER, instanceColors.size()*sizeof(glm::vec4), instanceColors.data(), GL_STATIC_DRAW);
+
+        attrLoc = 6; // shader layout start (location=6) vec4 instanceColor;
+        glVertexAttribPointer(attrLoc, 4, GL_FLOAT, GL_FALSE, sizeof(glm::vec4), (void*)0);
+        glEnableVertexAttribArray(attrLoc);
+        glVertexAttribDivisor(attrLoc,1);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
     glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    renderData.VBO = instanceVBO;
+    
+    renderData.VBO = 0;
     renderData.VAO = baseData.VAO;
     renderData.vertexCount = baseData.vertexCount;
     renderData.instanceCount = instanceMatrices.size();

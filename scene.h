@@ -14,6 +14,8 @@ struct SceneContext {
     std::vector<RenderData> renderDatas;
 };
 
+glm::mat4 get_isometric_view_matrix();
+
 SceneContext setup_scene();
 void draw_scene(SceneContext& context);
 
