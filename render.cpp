@@ -206,23 +206,29 @@ RenderData create_cube(float size)
     float half = size / 2.0f;
     float cubeVertices[36][3] =
     {
-        {-half, -half, -half}, {half, -half, -half}, {half, half, -half},
-        {half, half, -half}, {-half, half, -half}, {-half, -half, -half},
+        // Front (z = -half) — CCW when viewed from outside (looking from -z toward +z)
+        {-half, -half, -half}, {half, half, -half}, {half, -half, -half},
+        {half, half, -half}, {-half, -half, -half}, {-half, half, -half},
 
+        // Back (z = half) — CCW when viewed from outside (looking from +z toward -z)
         {-half, -half, half}, {half, -half, half}, {half, half, half},
         {half, half, half}, {-half, half, half}, {-half, -half, half},
 
-        {-half, -half, -half}, {-half, half, -half}, {-half, half, half},
-        {-half, half, half}, {-half, -half, half}, {-half, -half, -half},
+        // Left (x = -half) — CCW when viewed from outside (looking from -x toward +x)
+        {-half, -half, -half}, {-half, half, half}, {-half, half, -half},
+        {-half, half, half}, {-half, -half, -half}, {-half, -half, half},
 
+        // Right (x = half) — CCW when viewed from outside (looking from +x toward -x)
         {half, -half, -half}, {half, half, -half}, {half, half, half},
         {half, half, half}, {half, -half, half}, {half, -half, -half},
 
+        // Bottom (y = -half) — CCW when viewed from outside (looking from -y toward +y)
         {-half, -half, -half}, {half, -half, -half}, {half, -half, half},
         {half, -half, half}, {-half, -half, half}, {-half, -half, -half},
 
-        {-half, half, -half}, {half, half, -half}, {half, half, half},
-        {half, half, half}, {-half, half, half}, {-half, half, -half}
+        // Top (y = half) — CCW when viewed from outside (looking from +y toward -y)
+        {-half, half, -half}, {half, half, half}, {half, half, -half},
+        {half, half, half}, {-half, half, -half}, {-half, half, half}
     };
 
     float cubeNormals[36][3] =
