@@ -10,6 +10,21 @@
 #include <cmath>
 #include <iostream>
 
+
+enum color
+{
+    RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA
+};
+
+const glm::vec4 colorValues[] = {
+    glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), // RED
+    glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), // GREEN
+    glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), // BLUE
+    glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), // YELLOW
+    glm::vec4(0.0f, 1.0f, 1.0f, 1.0f), // CYAN
+    glm::vec4(1.0f, 0.0f, 1.0f, 1.0f)  // MAGENTA
+};
+
 std::vector<RenderData> create_geometries()
 {
     std::vector<RenderData> renderDatas;
@@ -44,7 +59,7 @@ RenderData create_geometries_instances()
     //RenderData baseData = create_cube(0.4f);
     RenderData baseData = create_bunny("../models/bunny.obj");
 
-    glm::mat4 model_scale = glm::scale(glm::mat4(1.0f), glm::vec3(3.0f));
+    glm::mat4 model_scale = glm::scale(glm::mat4(1.0f), glm::vec3(4.0f));
 
     std::vector<glm::mat4> matrices;
     matrices.reserve(10000);
@@ -52,21 +67,7 @@ RenderData create_geometries_instances()
     std::vector<glm::vec4> colors;
     colors.reserve(10000);
 
-    enum color
-    {
-        RED, GREEN, BLUE, YELLOW, CYAN, MAGENTA
-    };
-
-    const glm::vec4 colorValues[] = {
-        glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), // RED
-        glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), // GREEN
-        glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), // BLUE
-        glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), // YELLOW
-        glm::vec4(0.0f, 1.0f, 1.0f, 1.0f), // CYAN
-        glm::vec4(1.0f, 0.0f, 1.0f, 1.0f)  // MAGENTA
-    };
-
-    int gridDim = 5; // 22^3 = 10648 ≈ 10000
+    int gridDim = 22; // 22^3 = 10648 ≈ 10000
     float spacing = 0.8f;
     float offset = (gridDim - 1) * spacing * 0.5f;
 

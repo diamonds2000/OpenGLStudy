@@ -13,5 +13,5 @@ set "CMAKE_GENERATOR=Ninja"
 set "CMAKE_BUILD_TYPE=Release"
 
 echo Building with CMake generator: %CMAKE_GENERATOR%
-cmake -S . -B build -DVCPKG_TARGET_TRIPLET=x64-windows-static-md
+cmake -S . -B build --preset win64-static-md
 ninja -C build
