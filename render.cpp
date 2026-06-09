@@ -127,15 +127,15 @@ RenderData create_sphere(float radius, int slices, int stacks)
     {
         float V0 = (float)i / stacks;
         float V1 = (float)(i + 1) / stacks;
-        float phi0 = V0 * M_PI;
-        float phi1 = V1 * M_PI;
+        float phi0 = float(V0 * M_PI);
+        float phi1 = float(V1 * M_PI);
 
         for (int j = 0; j < slices; ++j)
         {
             float U0 = (float)j / slices;
             float U1 = (float)(j + 1) / slices;
-            float theta0 = U0 * (M_PI * 2);
-            float theta1 = U1 * (M_PI * 2);
+            float theta0 = float(U0 * (M_PI * 2));
+            float theta1 = float(U1 * (M_PI * 2));
 
             // Four corners of the current quad
             // v0 -- v1   (top row: i)
@@ -300,7 +300,7 @@ RenderData create_geometry_instances(
     renderData.VBO = 0;
     renderData.VAO = baseData.VAO;
     renderData.vertexCount = baseData.vertexCount;
-    renderData.instanceCount = instanceMatrices.size();
+    renderData.instanceCount = (GLuint)instanceMatrices.size();
 
     return renderData;
 }

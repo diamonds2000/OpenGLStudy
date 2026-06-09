@@ -2,7 +2,9 @@
 
 REM vcpkg install glew:x64-windows-static glfw3:x64-windows-static glm:x64-windows-static
 
-call "C:\Program Files\Microsoft Visual Studio\2022\Professional\Common7\Tools\VsDevCmd.bat" -arch=amd64
+if not defined VCToolsInstallDir (
+    call "C:\Program Files\Microsoft Visual Studio\2022\Professional\Common7\Tools\VsDevCmd.bat" -arch=amd64
+)
 
 rmdir /s /q build
 
