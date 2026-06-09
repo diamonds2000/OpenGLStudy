@@ -1,0 +1,21 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "win64-static-md",
+            "displayName": "Windows x64 static-md (default)",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+                "VCPKG_TARGET_TRIPLET": "x64-windows-static-md"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "build-win32-default",
+            "displayName": "Default build",
+            "configurePreset": "win64-static-md"
+        }
+    ]
+}

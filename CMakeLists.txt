@@ -1,8 +1,3 @@
-if(DEFINED ENV{VCPKG_ROOT})
-    message("use vcpkg = $ENV{VCPKG_ROOT}")
-    set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake" CACHE STRING "")
-endif()
-
 cmake_minimum_required(VERSION 3.12)
 
 project(OpenGLStudy)
@@ -33,3 +28,10 @@ target_link_libraries(OpenGLStudy
     glfw
     glm::glm-header-only
 )
+
+if (WIN32)
+    set_target_properties(OpenGLStudy PROPERTIES
+        COMPILE_FLAGS "/Od /Zi"
+        LINK_FLAGS "/DEBUG /OPT:REF /OPT:ICF"
+    )
+endif()
