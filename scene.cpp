@@ -56,10 +56,9 @@ std::vector<RenderData> create_geometries()
 
 RenderData create_geometries_instances()
 {
-    //RenderData baseData = create_cube(0.4f);
-    RenderData baseData = create_bunny("../models/bunny.obj");
-
-    glm::mat4 model_scale = glm::scale(glm::mat4(1.0f), glm::vec3(4.0f));
+    RenderData baseData = create_cube(0.4f);
+    //RenderData baseData = create_bunny("../models/bunny.obj");
+    //glm::mat4 model_scale = glm::scale(glm::mat4(1.0f), glm::vec3(4.0f));
 
     std::vector<glm::mat4> matrices;
     matrices.reserve(10000);
@@ -79,7 +78,7 @@ RenderData create_geometries_instances()
             {
                 glm::vec3 pos(i * spacing - offset, j * spacing - offset, k * spacing - offset);
                 glm::mat4 model = glm::translate(glm::mat4(1.0f), pos);
-                matrices.push_back(model * model_scale);
+                matrices.push_back(model);
                 colors.push_back(colorValues[k % 6]); // Cycle through the color values
             }
         }
@@ -108,20 +107,6 @@ SceneContext setup_scene()
     glm::vec3 up(0.0f, 1.0f, 0.0f);
     context.view = glm::lookAt(eye, center, up);
 
-    //context.u_mvp = glGetUniformLocation(context.prog, "u_mvp");
-    context.u_view = glGetUniformLocation(context.prog, "u_view");
-
-    GLuint u_projection = glGetUniformLocation(context.prog, "u_projection");
-    GLuint u_color = glGetUniformLocation(context.prog, "u_color");
-    GLuint u_lightDir = glGetUniformLocation(context.prog, "u_light_dir");
-    GLuint u_lightColor = glGetUniformLocation(context.prog, "u_light_color");
-
-    glUseProgram(context.prog);
-    glUniform3f(u_color, 1.0f, 0.5f, 0.2f);
-    glUniform3f(u_lightDir, 0.5f, 1.0f, 0.3f);
-    glUniform3f(u_lightColor, 1.0f, 1.0f, 1.0f);
-    glUniformMatrix4fv(u_projection, 1, GL_FALSE, glm::value_ptr(context.projection));
-
     context.renderDatas.push_back(create_geometries_instances());
     //context.renderDatas = create_geometries();
 
@@ -147,10 +132,21 @@ void update_view_from_camera(SceneContext& context)
 
 void draw_scene(SceneContext& context)
 {
-    //glUseProgram(context.prog);
-    
-    //context.view = glm::rotate(context.view, float(glm::radians(1.0f)), glm::vec3(1.0f, 1.0f, 0.0f)); // Rotate over time
+    glUseProgram(context.prog);
+    //context.u_mvp = glGetUniformLocation(context.prog, "u_mvp");
+    context.u_view = glGetUniformLocation(context.prog, "u_view");
 
+    GLuint u_projection = glGetUniformLocation(context.prog, "u_projection");
+    GLuint u_color = glGetUniformLocation(context.prog, "u_color");
+    GLuint u_lightDir = glGetUniformLocation(context.prog, "u_light_dir");
+    GLuint u_lightColor = glGetUniformLocation(context.prog, "u_light_color");
+
+    glUniform3f(u_color, 1.0f, 0.5f, 0.2f);
+    glUniform3f(u_lightDir, 0.5f, 1.0f, 0.3f);
+    glUniform3f(u_lightColor, 1.0f, 1.0f, 1.0f);
+    glUniformMatrix4fv(u_projection, 1, GL_FALSE, glm::value_ptr(context.projection));
+
+    //context.view = glm::rotate(context.view, float(glm::radians(1.0f)), glm::vec3(1.0f, 1.0f, 0.0f)); // Rotate over time
     //glUniformMatrix4fv(context.u_mvp, 1, GL_FALSE, glm::value_ptr(context.projection * context.view));
     glUniformMatrix4fv(context.u_view, 1, GL_FALSE, glm::value_ptr(context.view));
 
