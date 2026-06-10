@@ -30,6 +30,7 @@ target_link_libraries(OpenGLStudy
 )
 
 if (WIN32)
+    string(REPLACE "/O2" "" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
     set_target_properties(OpenGLStudy PROPERTIES
         COMPILE_FLAGS "/Od /Zi"
         LINK_FLAGS "/DEBUG /OPT:REF /OPT:ICF"
