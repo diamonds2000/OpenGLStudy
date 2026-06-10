@@ -14,6 +14,7 @@ add_executable(OpenGLStudy ${SRC_FILES})
 
 target_compile_definitions(OpenGLStudy PRIVATE GLEW_STATIC)
 target_compile_definitions(OpenGLStudy PRIVATE GLFW_STATIC)
+target_compile_definitions(OpenGLStudy PRIVATE STB_IMAGE_STATIC)
 
 target_include_directories(OpenGLStudy
     PRIVATE 

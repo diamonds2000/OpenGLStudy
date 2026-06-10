@@ -22,12 +22,14 @@ RenderData create_from_obj(const std::string& filepath)
     }
 
     std::vector<glm::vec3> positions;
+    std::vector<glm::vec2> fileTexCoords;
     std::vector<glm::vec3> fileNormals;
     bool hasFileNormals = false;
+    bool hasFileTexCoords = false;
 
-    // Each face vertex: (position_index, normal_index)
-    // normal_index < 0 means "not specified"
-    struct FaceVert { int p; int n; };
+    // Each face vertex: (position_index, texcoord_index, normal_index)
+    // indices < 0 mean "not specified"
+    struct FaceVert { int p; int t; int n; };
     std::vector<FaceVert> faceVerts;
 
     std::string line;
@@ -45,6 +47,13 @@ RenderData create_from_obj(const std::string& filepath)
             iss >> p.x >> p.y >> p.z;
             positions.push_back(p);
         }
+        else if (tok == "vt")
+        {
+            glm::vec2 t;
+            iss >> t.x >> t.y;
+            fileTexCoords.push_back(t);
+            hasFileTexCoords = true;
+        }
         else if (tok == "vn")
         {
             glm::vec3 n;
@@ -58,7 +67,7 @@ RenderData create_from_obj(const std::string& filepath)
             std::string part;
             while (iss >> part)
             {
-                FaceVert fv = {0, -1};
+                FaceVert fv = {0, -1, -1};
                 // Split on '/' — handles: v, v/t, v//n, v/t/n
                 std::vector<std::string> parts;
                 size_t start = 0, end;
@@ -71,6 +80,12 @@ RenderData create_from_obj(const std::string& filepath)
 
                 // parts[0] = vertex index
                 fv.p = std::stoi(parts[0]) - 1; // OBJ is 1-based
+                // parts[1] = texcoord index (optional)
+                if (parts.size() >= 2 && !parts[1].empty())
+                {
+                    fv.t = std::stoi(parts[1]) - 1;
+                }
+                // parts[2] = normal index (optional)
                 if (parts.size() >= 3 && !parts[2].empty())
                 {
                     fv.n = std::stoi(parts[2]) - 1;
@@ -112,11 +127,13 @@ RenderData create_from_obj(const std::string& filepath)
         }
     }
 
-    // ---- Expand face indices into flat vertex/normal arrays ----
+    // ---- Expand face indices into flat vertex/normal/texcoord arrays ----
     std::vector<float> verts;
     std::vector<float> norms;
+    std::vector<float> texCoords;
     verts.reserve(faceVerts.size() * 3);
     norms.reserve(faceVerts.size() * 3);
+    texCoords.reserve(faceVerts.size() * 2);
 
     for (size_t i = 0; i < faceVerts.size(); i += 3)
     {
@@ -136,11 +153,23 @@ RenderData create_from_obj(const std::string& filepath)
             norms.push_back(n.x);
             norms.push_back(n.y);
             norms.push_back(n.z);
+
+            // Texture coordinates (default to (0,0) if not available)
+            if (hasFileTexCoords && fv.t >= 0)
+            {
+                texCoords.push_back(fileTexCoords[fv.t].x);
+                texCoords.push_back(fileTexCoords[fv.t].y);
+            }
+            else
+            {
+                texCoords.push_back(0.0f);
+                texCoords.push_back(0.0f);
+            }
         }
     }
 
     int vertexCount = static_cast<int>(verts.size() / 3);
-    RenderData rd = create_render_data(verts.data(), norms.data(), vertexCount);
+    RenderData rd = create_render_data(verts.data(), norms.data(), texCoords.data(), vertexCount);
 
     std::cout << "[OBJ] Loaded " << filepath << ": "
               << positions.size() << " unique vertices, "

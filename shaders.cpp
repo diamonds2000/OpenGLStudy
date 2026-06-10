@@ -60,10 +60,12 @@ const char* vshader_src2 =
         "out vec3 mv_normal;"
         "out vec3 mv_light_dir;"
         "out vec3 v_color;"
+        "out vec2 v_texCoord;"
         "layout(location=0) in vec3 pos;"
         "layout(location=1) in vec3 normal;"
-        "layout(location=2) in mat4 instance_model;"
-        "layout(location=6) in vec3 color;"
+        "layout(location=2) in vec2 textureCoord;"
+        "layout(location=3) in mat4 instance_model;"
+        "layout(location=7) in vec3 color;"
         "void main()"
         "{"
         "    mat4 mv = u_view * instance_model;"
@@ -73,15 +75,18 @@ const char* vshader_src2 =
         "    mv_normal = (mv * vec4(normal, 0.0)).xyz;"
         "    mv_light_dir = normalize(mv * vec4(u_light_dir, 0.0)).xyz;"
         "    v_color = color;"
+        "    v_texCoord = textureCoord;"
         "}";
 
 const char* fshader_src2 =
         "#version 330 core\n"
         "uniform vec3 u_light_color;"
+        "uniform sampler2D u_texture;"
         "in vec3 v_color;"
         "in vec3 mv_pos;"
         "in vec3 mv_normal;"
         "in vec3 mv_light_dir;"
+        "in vec2 v_texCoord;"
         "out vec4 color;"
         "const vec3 ka = vec3(0.3, 0.3, 0.3);"
         "const vec3 kd = vec3(0.8, 0.8, 0.8);"
@@ -98,7 +103,7 @@ const char* fshader_src2 =
         "    vec3 dif = diff * kd * u_light_color * v_color;"
         "    float spec = diff > 0.0 ? pow(max(dot(R, V), 0.0), shine) : 0.0;"
         "    vec3 spe = spec * ks * u_light_color;"
-        "    color = vec4(amb + dif + spe, 1.0);"
+        "    color = vec4(amb + dif + spe, 1.0) * texture(u_texture, v_texCoord);"
         "}";
 
 /////////////////////////////////////////////////////////////////////////////
