@@ -16,7 +16,12 @@ RenderData create_triangle()
         0.0f, 0.0f, 1.0f,
         0.0f, 0.0f, 1.0f
     };
-    return create_render_data(vertices, normals, 3);
+    float textCoords[] = {
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        0.5f, 1.0f
+    };
+    return create_render_data(vertices, normals, textCoords, 3);
 }
 
 RenderData create_sphere(float radius, int slices, int stacks)
@@ -24,6 +29,7 @@ RenderData create_sphere(float radius, int slices, int stacks)
     // Each quad on the sphere surface produces 2 triangles = 6 vertices
     float* vertices = new float[slices * stacks * 6 * 3];
     float* normals = new float[slices * stacks * 6 * 3];
+    float* textCoords = new float[slices * stacks * 6 * 2];
     int index = 0;
 
     for (int i = 0; i < stacks; ++i)
@@ -96,10 +102,35 @@ RenderData create_sphere(float radius, int slices, int stacks)
         }
     }
 
-    RenderData renderData = create_render_data(vertices, normals, slices * stacks * 6);
+    int tcIndex = 0; // index into textCoords (2 floats per vertex)
+
+    for (int i = 0; i < stacks; ++i)
+    {
+        float V0 = (float)i / stacks;
+        float V1 = (float)(i + 1) / stacks;
+
+        for (int j = 0; j < slices; ++j)
+        {
+            float U0 = (float)j / slices;
+            float U1 = (float)(j + 1) / slices;
+
+            // Triangle 1: v0, v1, v3
+            textCoords[tcIndex++] = U0; textCoords[tcIndex++] = V0;
+            textCoords[tcIndex++] = U1; textCoords[tcIndex++] = V0;
+            textCoords[tcIndex++] = U1; textCoords[tcIndex++] = V1;
+
+            // Triangle 2: v0, v3, v2
+            textCoords[tcIndex++] = U0; textCoords[tcIndex++] = V0;
+            textCoords[tcIndex++] = U1; textCoords[tcIndex++] = V1;
+            textCoords[tcIndex++] = U0; textCoords[tcIndex++] = V1;
+        }
+    }
+
+    RenderData renderData = create_render_data(vertices, normals, textCoords, slices * stacks * 6);
 
     delete[] vertices;
     delete[] normals;
+    delete[] textCoords;
     return renderData;
 }
 
@@ -155,9 +186,28 @@ RenderData create_cube(float size)
         { 0,  1, 0}, { 0,  1, 0}, { 0,  1, 0},
         { 0,  1, 0}, { 0,  1, 0}, { 0,  1, 0}
     };
+    float textCoordinates[36][2] = {
+        // Front face (z = -half)
+        {0.0f, 0.0f}, {1.0f, 1.0f}, {1.0f, 0.0f},
+        {1.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, 1.0f},
+        // Back face (z = half)
+        {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f},
+        {1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f},
+        // Left face (x = -half)
+        {0.0f, 0.0f}, {1.0f, 1.0f}, {1.0f, 0.0f},
+        {1.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, 1.0f},
+        // Right face (x = half)
+        {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f},
+        {1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f},
+        // Bottom face (y = -half)
+        {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f},
+        {1.0f, 1.0f}, {0.0f, 1.0f}, {0.0f, 0.0f},
+        // Top face (y = half)
+        {0.0f, 0.0f}, {1.0f, 1.0f}, {1.0f, 0.0f},
+        {1.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, 1.0f}
+    };
 
-    RenderData renderData = create_render_data((float*)&cubeVertices, (float*)&cubeNormals, 36);
-
+    RenderData renderData = create_render_data((float*)&cubeVertices, (float*)&cubeNormals, (float*)&textCoordinates, 36);
     return renderData;
 }
 

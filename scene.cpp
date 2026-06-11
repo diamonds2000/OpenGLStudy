@@ -83,7 +83,9 @@ RenderData create_geometries_instances()
             }
         }
     }
-    return create_geometry_instances(baseData, matrices, colors);
+    RenderData renderData = create_geometry_instances(baseData, matrices, colors);
+    renderData.textureID = create_texture("../textures/uv_grid.png");
+    return renderData;
 }
 
 glm::mat4 get_isometric_view_matrix()
@@ -106,6 +108,22 @@ SceneContext setup_scene()
     glm::vec3 center(0.0f, 0.0f, 0.0f);
     glm::vec3 up(0.0f, 1.0f, 0.0f);
     context.view = glm::lookAt(eye, center, up);
+
+    //context.u_mvp = glGetUniformLocation(context.prog, "u_mvp");
+    context.u_view = glGetUniformLocation(context.prog, "u_view");
+
+    GLuint u_projection = glGetUniformLocation(context.prog, "u_projection");
+    GLuint u_color = glGetUniformLocation(context.prog, "u_color");
+    GLuint u_lightDir = glGetUniformLocation(context.prog, "u_light_dir");
+    GLuint u_lightColor = glGetUniformLocation(context.prog, "u_light_color");
+    GLuint u_texture = glGetUniformLocation(context.prog, "u_texture");
+
+    glUseProgram(context.prog);
+    glUniform3f(u_color, 1.0f, 0.5f, 0.2f);
+    glUniform3f(u_lightDir, 0.5f, 1.0f, 0.3f);
+    glUniform3f(u_lightColor, 1.0f, 1.0f, 1.0f);
+    glUniformMatrix4fv(u_projection, 1, GL_FALSE, glm::value_ptr(context.projection));
+    if (u_texture >= 0) glUniform1i(u_texture, 0); // sampler -> texture unit 0
 
     context.renderDatas.push_back(create_geometries_instances());
     //context.renderDatas = create_geometries();
@@ -167,6 +185,7 @@ void draw_scene(SceneContext& context)
         // }
         // glUniformMatrix4fv(u_model, 1, GL_FALSE, glm::value_ptr(renderData.modelMatrix));
 
+        glBindTexture(GL_TEXTURE_2D, renderData.textureID);
         glBindVertexArray(renderData.VAO);
         //glDrawArrays(GL_TRIANGLES, 0, renderData.vertexCount);
         glDrawArraysInstanced(GL_TRIANGLES, 0, renderData.vertexCount, renderData.instanceCount);
