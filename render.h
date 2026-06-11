@@ -16,6 +16,8 @@ struct RenderData {
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 };
 
+GLuint create_fbo(GLuint width, GLuint height);
+
 // Internal: create RenderData from flat vertex/normal arrays (count = number of vertices)
 RenderData create_render_data(float* vertices, float* normals, float* textCoords, int count);
 

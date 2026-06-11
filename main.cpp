@@ -84,11 +84,14 @@ int main()
         return -1;
     }
 
+    int width = 800;
+    int height = 600;
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Hello World", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(width, height, "Hello World", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -104,10 +107,10 @@ int main()
         return -1;
     }
 
-    SceneContext context = setup_scene();
+    SceneContext context = setup_scene(width, height);
 
     // Off-screen performance test (pure GPU, no vsync)
-    //performance_test_offscreen(context, 800, 600, 1000);
+    //performance_test_offscreen(context, width, height, 1000);
 
     // Set up camera controls
     glfwSetWindowUserPointer(window, &context);
@@ -127,6 +130,7 @@ int main()
 
         // Render OpenGL here
         draw_scene(context);
+        draw_edge(context);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

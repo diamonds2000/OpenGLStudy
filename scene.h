@@ -18,7 +18,11 @@ struct CameraController {
 };
 
 struct SceneContext {
-    GLuint prog = 0;
+    int width = 0;
+    int height = 0;
+    GLuint prog_main = 0;
+    GLuint prog_edge = 0;
+    GLuint fbo = 0;
     GLint u_mvp = 0;
     GLint u_view = 0;
     GLint u_light_dir = 0;
@@ -30,8 +34,9 @@ struct SceneContext {
 
 glm::mat4 get_isometric_view_matrix();
 
-SceneContext setup_scene();
+SceneContext setup_scene(int width, int height);
 void draw_scene(SceneContext& context);
+void draw_edge(SceneContext& context);
 void update_view_from_camera(SceneContext& context);
 
 #endif // SCENE_H

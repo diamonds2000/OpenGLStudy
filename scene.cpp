@@ -96,34 +96,22 @@ glm::mat4 get_isometric_view_matrix()
     return glm::lookAt(eye, center, up);
 }
 
-SceneContext setup_scene()
+SceneContext setup_scene(int width, int height)
 {
     SceneContext context;
-    context.prog = create_program(vshader_src2, fshader_src2);
+    context.width = width;
+    context.height = height;
+    context.prog_main = create_program(vshader_src2, fshader_src2);
+    context.prog_edge = create_program(vshader_edge_src, fshader_edge_src);
+    context.fbo = create_fbo(width, height);
 
     //context.view = glm::rotate(viewMatrix, float(glm::radians(30.0f)), glm::vec3(1.0f, 1.0f, 0.0f));
-    context.projection = glm::perspective(glm::radians(45.0f), 800.0f/600.0f, 0.1f, 100.0f);
+    context.projection = glm::perspective(glm::radians(45.0f), float(width)/float(height), 0.1f, 100.0f);
 
     glm::vec3 eye(12.0f, 10.0f, 50.0f);
     glm::vec3 center(0.0f, 0.0f, 0.0f);
     glm::vec3 up(0.0f, 1.0f, 0.0f);
     context.view = glm::lookAt(eye, center, up);
-
-    //context.u_mvp = glGetUniformLocation(context.prog, "u_mvp");
-    context.u_view = glGetUniformLocation(context.prog, "u_view");
-
-    GLuint u_projection = glGetUniformLocation(context.prog, "u_projection");
-    GLuint u_color = glGetUniformLocation(context.prog, "u_color");
-    GLuint u_lightDir = glGetUniformLocation(context.prog, "u_light_dir");
-    GLuint u_lightColor = glGetUniformLocation(context.prog, "u_light_color");
-    GLuint u_texture = glGetUniformLocation(context.prog, "u_texture");
-
-    glUseProgram(context.prog);
-    glUniform3f(u_color, 1.0f, 0.5f, 0.2f);
-    glUniform3f(u_lightDir, 0.5f, 1.0f, 0.3f);
-    glUniform3f(u_lightColor, 1.0f, 1.0f, 1.0f);
-    glUniformMatrix4fv(u_projection, 1, GL_FALSE, glm::value_ptr(context.projection));
-    if (u_texture >= 0) glUniform1i(u_texture, 0); // sampler -> texture unit 0
 
     context.renderDatas.push_back(create_geometries_instances());
     //context.renderDatas = create_geometries();
@@ -150,19 +138,23 @@ void update_view_from_camera(SceneContext& context)
 
 void draw_scene(SceneContext& context)
 {
-    glUseProgram(context.prog);
-    //context.u_mvp = glGetUniformLocation(context.prog, "u_mvp");
-    context.u_view = glGetUniformLocation(context.prog, "u_view");
+    glUseProgram(context.prog_main);
+    glBindFramebuffer(GL_FRAMEBUFFER, context.fbo);
 
-    GLuint u_projection = glGetUniformLocation(context.prog, "u_projection");
-    GLuint u_color = glGetUniformLocation(context.prog, "u_color");
-    GLuint u_lightDir = glGetUniformLocation(context.prog, "u_light_dir");
-    GLuint u_lightColor = glGetUniformLocation(context.prog, "u_light_color");
+    //context.u_mvp = glGetUniformLocation(context.prog, "u_mvp");
+    context.u_view = glGetUniformLocation(context.prog_main, "u_view");
+
+    GLuint u_projection = glGetUniformLocation(context.prog_main, "u_projection");
+    GLuint u_color = glGetUniformLocation(context.prog_main, "u_color");
+    GLuint u_lightDir = glGetUniformLocation(context.prog_main, "u_light_dir");
+    GLuint u_lightColor = glGetUniformLocation(context.prog_main, "u_light_color");
+    GLuint u_texture = glGetUniformLocation(context.prog_main, "u_texture");
 
     glUniform3f(u_color, 1.0f, 0.5f, 0.2f);
     glUniform3f(u_lightDir, 0.5f, 1.0f, 0.3f);
     glUniform3f(u_lightColor, 1.0f, 1.0f, 1.0f);
     glUniformMatrix4fv(u_projection, 1, GL_FALSE, glm::value_ptr(context.projection));
+    if (u_texture >= 0) glUniform1i(u_texture, 0); // sampler -> texture unit 0
 
     //context.view = glm::rotate(context.view, float(glm::radians(1.0f)), glm::vec3(1.0f, 1.0f, 0.0f)); // Rotate over time
     //glUniformMatrix4fv(context.u_mvp, 1, GL_FALSE, glm::value_ptr(context.projection * context.view));
@@ -191,5 +183,41 @@ void draw_scene(SceneContext& context)
         glDrawArraysInstanced(GL_TRIANGLES, 0, renderData.vertexCount, renderData.instanceCount);
         glBindVertexArray(0);
     }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
+void draw_edge(SceneContext& context)
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glUseProgram(context.prog_edge);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, context.fbo);
+
+    GLint colorTexture;
+    glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &colorTexture);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, colorTexture);
+
+    GLint depthTexture;
+    glGetFramebufferAttachmentParameteriv(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_FRAMEBUFFER_ATTACHMENT_OBJECT_NAME, &depthTexture);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, depthTexture);
+
+    glUniform1i(glGetUniformLocation(context.prog_edge, "u_ColorTex"), 0);
+    glUniform1i(glGetUniformLocation(context.prog_edge, "u_DepthTex"), 1);
+    glUniform2f(glGetUniformLocation(context.prog_edge, "u_TexelSize"), 1.0f / context.width, 1.0f / context.height);
+    glUniform1f(glGetUniformLocation(context.prog_edge, "u_EdgeThreshold"), 0.01f);
+    glUniform4fv(glGetUniformLocation(context.prog_edge, "u_OutlineColor"), 1, glm::value_ptr(colorValues[GREEN]));
+
+    GLuint dummyVAO;
+    glGenVertexArrays(1, &dummyVAO);
+    glBindVertexArray(dummyVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glBindVertexArray(0);
+}
