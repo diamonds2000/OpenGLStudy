@@ -141,6 +141,9 @@ void draw_scene(SceneContext& context)
     glUseProgram(context.prog_main);
     glBindFramebuffer(GL_FRAMEBUFFER, context.fbo);
 
+    // Clear the FBO's color and depth buffers before rendering
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     //context.u_mvp = glGetUniformLocation(context.prog, "u_mvp");
     context.u_view = glGetUniformLocation(context.prog_main, "u_view");
 
@@ -189,9 +192,17 @@ void draw_scene(SceneContext& context)
 
 void draw_edge(SceneContext& context)
 {
+    // Create dummy VAO once and reuse it
+    static GLuint dummyVAO = 0;
+    if (dummyVAO == 0)
+        glGenVertexArrays(1, &dummyVAO);
+
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(context.prog_edge);
+
+    // Disable depth test for full-screen post-processing
+    glDisable(GL_DEPTH_TEST);
 
     glBindFramebuffer(GL_FRAMEBUFFER, context.fbo);
 
@@ -215,9 +226,10 @@ void draw_edge(SceneContext& context)
     glUniform1f(glGetUniformLocation(context.prog_edge, "u_EdgeThreshold"), 0.01f);
     glUniform4fv(glGetUniformLocation(context.prog_edge, "u_OutlineColor"), 1, glm::value_ptr(colorValues[GREEN]));
 
-    GLuint dummyVAO;
-    glGenVertexArrays(1, &dummyVAO);
     glBindVertexArray(dummyVAO);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glBindVertexArray(0);
+
+    // Re-enable depth test for next frame's scene rendering
+    glEnable(GL_DEPTH_TEST);
 }

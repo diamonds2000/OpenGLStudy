@@ -167,8 +167,8 @@ const char* vshader_edge_src = R"(
         {
             vec2 pos = vec2(0.0, 0.0);
             if (gl_VertexID == 0) { pos = vec2(-1.0, -1.0); }
-            else if (gl_VertexID == 1) { pos = vec2(1.0, -1.0); }
-            else if (gl_VertexID == 2) { pos = vec2(-1.0, 1.0); }
+            else if (gl_VertexID == 1) { pos = vec2(3.0, -1.0); }
+            else if (gl_VertexID == 2) { pos = vec2(-1.0, 3.0); }
             gl_Position = vec4(pos, 0.0, 1.0);
             vUV = pos * 0.5 + 0.5;
         }
@@ -206,13 +206,17 @@ const char* fshader_edge_src = R"(
             float gx = d02 + 2.0 * d12 + d22 - (d00 + 2.0 * d10 + d20);
             float gy = d20 + 2.0 * d21 + d22 - (d00 + 2.0 * d01 + d02);
             float edgeStrength = sqrt(gx * gx + gy * gy);
-            //if (edgeStrength > u_EdgeThreshold)
-            //{
-            //    fragColor = u_OutlineColor;
-            //}
-            //else
-            //{
-                  fragColor = vec4(baseColor, 1.0);
-            //}
+            if (edgeStrength > u_EdgeThreshold)
+            {
+                fragColor = u_OutlineColor;
+            }
+            else
+            {
+                fragColor = vec4(baseColor, 1.0);
+            }
+
+            //float edge = smoothstep(u_EdgeThreshold, u_EdgeThreshold * 3.0, edgeStrength);
+            //vec3 edgeColor = mix(baseColor, u_OutlineColor.rgb, edge * u_OutlineColor.a);
+            //fragColor = vec4(edgeColor, 1.0);
         }
 )";
