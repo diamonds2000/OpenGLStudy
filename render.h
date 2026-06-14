@@ -18,6 +18,7 @@ struct RenderData {
 
 GLuint create_fbo(GLuint width, GLuint height);
 
+RenderData create_render_data(float* vertices, int count);
 // Internal: create RenderData from flat vertex/normal arrays (count = number of vertices)
 RenderData create_render_data(float* vertices, float* normals, float* textCoords, int count);
 

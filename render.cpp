@@ -99,6 +99,27 @@ GLuint create_fbo(GLuint width, GLuint height)
     return fbo;
 }
 
+RenderData create_render_data(float* vertices, int count)
+{
+    RenderData renderData;
+    glGenVertexArrays(1, &renderData.VAO);
+    glGenBuffers(1, &renderData.VBO);
+
+    glBindVertexArray(renderData.VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, renderData.VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * count, vertices, GL_STATIC_DRAW);
+    renderData.vertexCount = count;
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);  // slot 0: position
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
+    return renderData;
+}
+
 RenderData create_render_data(float* vertices, float* normals, float* textCoords, int count)
 {
     float* data = new float[count * 8];

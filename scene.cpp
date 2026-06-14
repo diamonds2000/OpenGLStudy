@@ -1,6 +1,10 @@
 #include "scene.h"
 #include "render.h"
 #include "shaders.h"
+#include "geometry.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -88,6 +92,49 @@ RenderData create_geometries_instances()
     return renderData;
 }
 
+RenderData create_sky_box()
+{
+    std::vector<std::string> skybox_faces = {
+        "../skybox/right.jpg",
+        "../skybox/left.jpg",
+        "../skybox/top.jpg",
+        "../skybox/bottom.jpg",
+        "../skybox/front.jpg",
+        "../skybox/back.jpg"
+    };
+
+    GLuint sky_texture;
+    glGenTextures(1, &sky_texture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, sky_texture);
+
+    for (int i = 0; i < 6; i++)
+    {
+        int width, height, nrChannels;
+        unsigned char* data = stbi_load(skybox_faces[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            stbi_image_free(data);
+        }
+        else
+        {
+            std::cerr << "Failed to load skybox texture: " << skybox_faces[i] << std::endl;
+        }
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+
+    RenderData skyboxData = create_skybox();
+    skyboxData.textureID = sky_texture;
+    return skyboxData;
+}
+
 glm::mat4 get_isometric_view_matrix()
 {
     glm::vec3 eye(12.0f, 10.0f, 50.0f);
@@ -103,6 +150,7 @@ SceneContext setup_scene(int width, int height)
     context.height = height;
     context.prog_main = create_program(vshader_src2, fshader_src2);
     context.prog_edge = create_program(vshader_edge_src, fshader_edge_src);
+    context.prog_skybox = create_program(vshader_skybox_src, fshader_skybox_src);
     context.fbo = create_fbo(width, height);
 
     //context.view = glm::rotate(viewMatrix, float(glm::radians(30.0f)), glm::vec3(1.0f, 1.0f, 0.0f));
@@ -113,6 +161,7 @@ SceneContext setup_scene(int width, int height)
     glm::vec3 up(0.0f, 1.0f, 0.0f);
     context.view = glm::lookAt(eye, center, up);
 
+    context.skyboxData = create_sky_box();
     context.renderDatas.push_back(create_geometries_instances());
     //context.renderDatas = create_geometries();
 
@@ -140,6 +189,8 @@ void draw_scene(SceneContext& context)
 {
     glUseProgram(context.prog_main);
     glBindFramebuffer(GL_FRAMEBUFFER, context.fbo);
+
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     // Clear the FBO's color and depth buffers before rendering
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -197,7 +248,7 @@ void draw_edge(SceneContext& context)
     if (dummyVAO == 0)
         glGenVertexArrays(1, &dummyVAO);
 
-    glClear(GL_COLOR_BUFFER_BIT);
+    //glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(context.prog_edge);
 
@@ -232,4 +283,34 @@ void draw_edge(SceneContext& context)
 
     // Re-enable depth test for next frame's scene rendering
     glEnable(GL_DEPTH_TEST);
+}
+
+void draw_skybox(SceneContext& context)
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    glDepthMask(GL_FALSE); // Disable depth writing for skybox
+
+    glUseProgram(context.prog_skybox);
+
+    // Set uniforms
+    GLuint u_projection = glGetUniformLocation(context.prog_skybox, "u_projection");
+    GLuint u_view = glGetUniformLocation(context.prog_skybox, "u_view");
+    glUniformMatrix4fv(u_projection, 1, GL_FALSE, glm::value_ptr(context.projection));
+
+    // Remove translation from view matrix for skybox (skybox should not move with camera position)
+    glm::mat4 skyboxView = glm::mat4(glm::mat3(context.view));
+    glUniformMatrix4fv(u_view, 1, GL_FALSE, glm::value_ptr(skyboxView));
+
+    // Bind cubemap texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, context.skyboxData.textureID);
+    glUniform1i(glGetUniformLocation(context.prog_skybox, "u_skybox"), 0);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindVertexArray(context.skyboxData.VAO);
+    glDrawArrays(GL_TRIANGLES, 0, context.skyboxData.vertexCount);
+    glBindVertexArray(0);
+
+    glDepthMask(GL_TRUE); // Re-enable depth writing for next frame
 }

@@ -128,6 +128,7 @@ int main()
         update_view_from_camera(context);
 
         // Render OpenGL here
+        draw_skybox(context);
         draw_scene(context);
         draw_edge(context);
 

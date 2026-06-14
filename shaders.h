@@ -14,4 +14,7 @@ extern const char* vshader_edge_src;
 extern const char* fshader_edge_src;
 extern const char* fshader_edge_src2;
 
+extern const char* vshader_skybox_src;
+extern const char* fshader_skybox_src;
+
 #endif // SHADERS_H
