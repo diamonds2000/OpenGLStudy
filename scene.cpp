@@ -190,10 +190,8 @@ void draw_scene(SceneContext& context)
     glUseProgram(context.prog_main);
     glBindFramebuffer(GL_FRAMEBUFFER, context.fbo);
 
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
-    // Clear the FBO's color and depth buffers before rendering
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // Only clear depth — color buffer already contains the skybox
+    glClear(GL_DEPTH_BUFFER_BIT);
 
     //context.u_mvp = glGetUniformLocation(context.prog, "u_mvp");
     context.u_view = glGetUniformLocation(context.prog_main, "u_view");
@@ -287,7 +285,10 @@ void draw_edge(SceneContext& context)
 
 void draw_skybox(SceneContext& context)
 {
-    glClear(GL_COLOR_BUFFER_BIT);
+    // Clear the FBO color and depth before rendering skybox (first pass into FBO)
+    glBindFramebuffer(GL_FRAMEBUFFER, context.fbo);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glDepthMask(GL_FALSE); // Disable depth writing for skybox
 
@@ -307,10 +308,10 @@ void draw_skybox(SceneContext& context)
     glBindTexture(GL_TEXTURE_CUBE_MAP, context.skyboxData.textureID);
     glUniform1i(glGetUniformLocation(context.prog_skybox, "u_skybox"), 0);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glBindVertexArray(context.skyboxData.VAO);
     glDrawArrays(GL_TRIANGLES, 0, context.skyboxData.vertexCount);
     glBindVertexArray(0);
 
     glDepthMask(GL_TRUE); // Re-enable depth writing for next frame
+    glEnable(GL_CULL_FACE); // Re-enable culling for scene objects
 }
