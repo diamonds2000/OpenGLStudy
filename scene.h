@@ -6,8 +6,8 @@
 #include "render.h"
 
 struct CameraController {
-    float yaw = -45.0f;
-    float pitch = -20.0f;
+    float yaw = 0.0f;
+    float pitch = 0.0f;
     float distance = 50.0f;
     glm::vec3 target = glm::vec3(0.0f);
 
@@ -41,5 +41,7 @@ void draw_skybox(SceneContext& context);
 void draw_scene(SceneContext& context);
 void draw_edge(SceneContext& context);
 void update_view_from_camera(SceneContext& context);
+
+void copy_fbo_to_screen(SceneContext& context);
 
 #endif // SCENE_H

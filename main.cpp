@@ -107,6 +107,9 @@ int main()
         return -1;
     }
 
+    // Get actual framebuffer size (accounts for Retina/HiDPI scaling on macOS)
+    glfwGetFramebufferSize(window, &width, &height);
+
     SceneContext context = setup_scene(width, height);
 
     // Off-screen performance test (pure GPU, no vsync)
@@ -131,6 +134,7 @@ int main()
         draw_skybox(context);
         draw_scene(context);
         draw_edge(context);
+        //copy_fbo_to_screen(context);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

@@ -156,7 +156,8 @@ SceneContext setup_scene(int width, int height)
     //context.view = glm::rotate(viewMatrix, float(glm::radians(30.0f)), glm::vec3(1.0f, 1.0f, 0.0f));
     context.projection = glm::perspective(glm::radians(45.0f), float(width)/float(height), 0.1f, 100.0f);
 
-    glm::vec3 eye(12.0f, 10.0f, 50.0f);
+    //glm::vec3 eye(12.0f, 10.0f, 50.0f);
+    glm::vec3 eye(100.0f, 0.0f, 0.0f);
     glm::vec3 center(0.0f, 0.0f, 0.0f);
     glm::vec3 up(0.0f, 1.0f, 0.0f);
     context.view = glm::lookAt(eye, center, up);
@@ -276,17 +277,27 @@ void draw_edge(SceneContext& context)
     glUniform4fv(glGetUniformLocation(context.prog_edge, "u_OutlineColor"), 1, glm::value_ptr(colorValues[GREEN]));
 
     glBindVertexArray(dummyVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
 
     // Re-enable depth test for next frame's scene rendering
     glEnable(GL_DEPTH_TEST);
 }
 
+void copy_fbo_to_screen(SceneContext& context)
+{
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, context.fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // Default framebuffer
+    glBlitFramebuffer(0, 0, context.width, context.height, 0, 0, context.width, context.height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 void draw_skybox(SceneContext& context)
 {
     // Clear the FBO color and depth before rendering skybox (first pass into FBO)
     glBindFramebuffer(GL_FRAMEBUFFER, context.fbo);
+
+    glViewport(0, 0, context.width, context.height);
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

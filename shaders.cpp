@@ -167,8 +167,11 @@ const char* vshader_edge_src = R"(
         {
             vec2 pos = vec2(0.0, 0.0);
             if (gl_VertexID == 0) { pos = vec2(-1.0, -1.0); }
-            else if (gl_VertexID == 1) { pos = vec2(3.0, -1.0); }
-            else if (gl_VertexID == 2) { pos = vec2(-1.0, 3.0); }
+            else if (gl_VertexID == 1) { pos = vec2(1.0, -1.0); }
+            else if (gl_VertexID == 2) { pos = vec2(-1.0, 1.0); }
+            else if (gl_VertexID == 3) { pos = vec2(-1.0, 1.0); }
+            else if (gl_VertexID == 4) { pos = vec2(1.0, -1.0); }
+            else if (gl_VertexID == 5) { pos = vec2(1.0, 1.0); }
             gl_Position = vec4(pos, 0.0, 1.0);
             vUV = pos * 0.5 + 0.5;
         }
