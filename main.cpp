@@ -132,9 +132,9 @@ int main()
 
         // Render OpenGL here
         draw_skybox(context);
-        draw_scene(context);
-        draw_edge(context);
-        //copy_fbo_to_screen(context);
+        draw_scene_mirror(context);
+        //draw_edge(context);
+        copy_fbo_to_screen(context);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

@@ -148,7 +148,7 @@ SceneContext setup_scene(int width, int height)
     SceneContext context;
     context.width = width;
     context.height = height;
-    context.prog_main = create_program(vshader_src2, fshader_src2);
+    context.prog_main = create_program(vshader_mirror_src, fshader_mirror_src);
     context.prog_edge = create_program(vshader_edge_src, fshader_edge_src);
     context.prog_skybox = create_program(vshader_skybox_src, fshader_skybox_src);
     context.fbo = create_fbo(width, height);
@@ -230,6 +230,40 @@ void draw_scene(SceneContext& context)
         // }
         // glUniformMatrix4fv(u_model, 1, GL_FALSE, glm::value_ptr(renderData.modelMatrix));
 
+        glBindTexture(GL_TEXTURE_2D, renderData.textureID);
+        glBindVertexArray(renderData.VAO);
+        //glDrawArrays(GL_TRIANGLES, 0, renderData.vertexCount);
+        glDrawArraysInstanced(GL_TRIANGLES, 0, renderData.vertexCount, renderData.instanceCount);
+        glBindVertexArray(0);
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void draw_scene_mirror(SceneContext& context)
+{
+    glUseProgram(context.prog_main);
+    glBindFramebuffer(GL_FRAMEBUFFER, context.fbo);
+
+    // Only clear depth — color buffer already contains the skybox
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    //context.u_mvp = glGetUniformLocation(context.prog, "u_mvp");
+    context.u_view = glGetUniformLocation(context.prog_main, "u_view");
+    GLuint u_projection = glGetUniformLocation(context.prog_main, "u_projection");
+    glUniformMatrix4fv(u_projection, 1, GL_FALSE, glm::value_ptr(context.projection));
+
+    // Bind cubemap texture
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, context.skyboxData.textureID);
+    glUniform1i(glGetUniformLocation(context.prog_skybox, "u_texture"), 0);
+
+    //context.view = glm::rotate(context.view, float(glm::radians(1.0f)), glm::vec3(1.0f, 1.0f, 0.0f)); // Rotate over time
+    //glUniformMatrix4fv(context.u_mvp, 1, GL_FALSE, glm::value_ptr(context.projection * context.view));
+    glUniformMatrix4fv(context.u_view, 1, GL_FALSE, glm::value_ptr(context.view));
+
+    for (const auto& renderData : context.renderDatas)
+    {
         glBindTexture(GL_TEXTURE_2D, renderData.textureID);
         glBindVertexArray(renderData.VAO);
         //glDrawArrays(GL_TRIANGLES, 0, renderData.vertexCount);

@@ -39,6 +39,7 @@ glm::mat4 get_isometric_view_matrix();
 SceneContext setup_scene(int width, int height);
 void draw_skybox(SceneContext& context);
 void draw_scene(SceneContext& context);
+void draw_scene_mirror(SceneContext& context);
 void draw_edge(SceneContext& context);
 void update_view_from_camera(SceneContext& context);
 
