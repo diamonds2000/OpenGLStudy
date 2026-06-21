@@ -9,58 +9,7 @@
 
 #include <iostream>
 
-GLuint create_program(const char* vshader_src, const char* fshader_src)
-{
-    GLint ok;
-    GLuint prog;
 
-    GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vs, 1, &vshader_src, nullptr);
-    glCompileShader(vs);
-    glGetShaderiv(vs, GL_COMPILE_STATUS, &ok);
-    if (!ok)
-    {
-        GLint len;
-        glGetShaderiv(vs, GL_INFO_LOG_LENGTH, &len);
-        char* log = new char[len];
-        glGetShaderInfoLog(vs, len, nullptr, log);
-        std::cerr << "Vertex shader compilation failed:\n" << log << std::endl;
-        delete[] log;
-    }
-
-    GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fs, 1, &fshader_src, nullptr);
-    glCompileShader(fs);
-    glGetShaderiv(fs, GL_COMPILE_STATUS, &ok);
-    if (!ok)
-    {
-        GLint len;
-        glGetShaderiv(fs, GL_INFO_LOG_LENGTH, &len);
-        char* log = new char[len];
-        glGetShaderInfoLog(fs, len, nullptr, log);
-        std::cerr << "Fragment shader compilation failed:\n" << log << std::endl;
-        delete[] log;
-    }
-
-    prog = glCreateProgram();
-    glAttachShader(prog, vs);
-    glAttachShader(prog, fs);
-    glLinkProgram(prog);
-    glGetProgramiv(prog, GL_LINK_STATUS, &ok);
-    if (!ok)    {
-        GLint len;
-        glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &len);
-        char* log = new char[len];
-        glGetProgramInfoLog(prog, len, nullptr, log);
-        std::cerr << "Shader program linking failed:\n" << log << std::endl;
-        delete[] log;
-    }
-
-    glDeleteShader(vs);
-    glDeleteShader(fs);
-
-    return prog;
-}
 
 GLuint create_fbo(GLuint width, GLuint height)
 {

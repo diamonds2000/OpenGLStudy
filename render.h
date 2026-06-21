@@ -22,7 +22,6 @@ RenderData create_render_data(float* vertices, int count);
 // Internal: create RenderData from flat vertex/normal arrays (count = number of vertices)
 RenderData create_render_data(float* vertices, float* normals, float* textCoords, int count);
 
-GLuint create_program(const char* vshader_src, const char* fshader_src);
 GLuint create_texture(const char* imagePath);
 
 RenderData create_triangle();

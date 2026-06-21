@@ -2,6 +2,10 @@
 #include "render.h"
 #include "shaders.h"
 #include "geometry.h"
+#include "render_base.h"
+#include "render_mirror.h"
+#include "render_edge.h"
+#include "render_skybox.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -148,10 +152,14 @@ SceneContext setup_scene(int width, int height)
     SceneContext context;
     context.width = width;
     context.height = height;
-    context.prog_main = create_program(vshader_mirror_src, fshader_mirror_src);
-    context.prog_edge = create_program(vshader_edge_src, fshader_edge_src);
-    context.prog_skybox = create_program(vshader_skybox_src, fshader_skybox_src);
+    context.scene_render = std::make_unique<RenderMirror>();
+    context.edge_render = std::make_unique<RenderEdge>();
+    context.skybox_render = std::make_unique<RenderSkybox>();
     context.fbo = create_fbo(width, height);
+
+    context.scene_render->init();
+    context.edge_render->init();
+    context.skybox_render->init();
 
     //context.view = glm::rotate(viewMatrix, float(glm::radians(30.0f)), glm::vec3(1.0f, 1.0f, 0.0f));
     context.projection = glm::perspective(glm::radians(45.0f), float(width)/float(height), 0.1f, 100.0f);
@@ -188,30 +196,20 @@ void update_view_from_camera(SceneContext& context)
 
 void draw_scene(SceneContext& context)
 {
-    glUseProgram(context.prog_main);
+    context.scene_render->use();
     glBindFramebuffer(GL_FRAMEBUFFER, context.fbo);
 
     // Only clear depth — color buffer already contains the skybox
     glClear(GL_DEPTH_BUFFER_BIT);
 
-    //context.u_mvp = glGetUniformLocation(context.prog, "u_mvp");
-    context.u_view = glGetUniformLocation(context.prog_main, "u_view");
-
-    GLuint u_projection = glGetUniformLocation(context.prog_main, "u_projection");
-    GLuint u_color = glGetUniformLocation(context.prog_main, "u_color");
-    GLuint u_lightDir = glGetUniformLocation(context.prog_main, "u_light_dir");
-    GLuint u_lightColor = glGetUniformLocation(context.prog_main, "u_light_color");
-    GLuint u_texture = glGetUniformLocation(context.prog_main, "u_texture");
-
-    glUniform3f(u_color, 1.0f, 0.5f, 0.2f);
-    glUniform3f(u_lightDir, 0.5f, 1.0f, 0.3f);
-    glUniform3f(u_lightColor, 1.0f, 1.0f, 1.0f);
-    glUniformMatrix4fv(u_projection, 1, GL_FALSE, glm::value_ptr(context.projection));
-    if (u_texture >= 0) glUniform1i(u_texture, 0); // sampler -> texture unit 0
-
     //context.view = glm::rotate(context.view, float(glm::radians(1.0f)), glm::vec3(1.0f, 1.0f, 0.0f)); // Rotate over time
-    //glUniformMatrix4fv(context.u_mvp, 1, GL_FALSE, glm::value_ptr(context.projection * context.view));
-    glUniformMatrix4fv(context.u_view, 1, GL_FALSE, glm::value_ptr(context.view));
+    context.scene_render->setUniform("u_mvp", context.projection * context.view);
+    context.scene_render->setUniform("u_projection", context.projection);
+    context.scene_render->setUniform("u_view", context.view);
+    context.scene_render->setUniform("u_color", glm::vec3(1.0f, 0.5f, 0.2f));
+    context.scene_render->setUniform("u_light_dir", glm::vec3(0.5f, 1.0f, 0.3f));
+    context.scene_render->setUniform("u_light_color", glm::vec3(1.0f, 1.0f, 1.0f));
+    context.scene_render->setUniform("u_texture", 0);  // sampler -> texture unit 0
 
     for (const auto& renderData : context.renderDatas)
     {
@@ -242,25 +240,19 @@ void draw_scene(SceneContext& context)
 
 void draw_scene_mirror(SceneContext& context)
 {
-    glUseProgram(context.prog_main);
+    context.scene_render->use();
     glBindFramebuffer(GL_FRAMEBUFFER, context.fbo);
 
     // Only clear depth — color buffer already contains the skybox
     glClear(GL_DEPTH_BUFFER_BIT);
 
-    //context.u_mvp = glGetUniformLocation(context.prog, "u_mvp");
-    context.u_view = glGetUniformLocation(context.prog_main, "u_view");
-    GLuint u_projection = glGetUniformLocation(context.prog_main, "u_projection");
-    glUniformMatrix4fv(u_projection, 1, GL_FALSE, glm::value_ptr(context.projection));
+    context.scene_render->setUniform("u_projection", context.projection);
+    context.scene_render->setUniform("u_view", context.view);
 
     // Bind cubemap texture
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, context.skyboxData.textureID);
-    glUniform1i(glGetUniformLocation(context.prog_skybox, "u_texture"), 0);
-
-    //context.view = glm::rotate(context.view, float(glm::radians(1.0f)), glm::vec3(1.0f, 1.0f, 0.0f)); // Rotate over time
-    //glUniformMatrix4fv(context.u_mvp, 1, GL_FALSE, glm::value_ptr(context.projection * context.view));
-    glUniformMatrix4fv(context.u_view, 1, GL_FALSE, glm::value_ptr(context.view));
+    context.skybox_render->setUniform("u_texture", 0);
 
     for (const auto& renderData : context.renderDatas)
     {
@@ -283,7 +275,12 @@ void draw_edge(SceneContext& context)
 
     //glClear(GL_COLOR_BUFFER_BIT);
 
-    glUseProgram(context.prog_edge);
+    context.edge_render->use();
+    context.edge_render->setUniform("u_ColorTex", 0);
+    context.edge_render->setUniform("u_DepthTex", 1);
+    context.edge_render->setUniform("u_TexelSize", glm::vec2(1.0f / context.width, 1.0f / context.height));
+    context.edge_render->setUniform("u_EdgeThreshold", 0.01f);
+    context.edge_render->setUniform("u_OutlineColor", colorValues[GREEN]);
 
     // Disable depth test for full-screen post-processing
     glDisable(GL_DEPTH_TEST);
@@ -303,12 +300,6 @@ void draw_edge(SceneContext& context)
 
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, depthTexture);
-
-    glUniform1i(glGetUniformLocation(context.prog_edge, "u_ColorTex"), 0);
-    glUniform1i(glGetUniformLocation(context.prog_edge, "u_DepthTex"), 1);
-    glUniform2f(glGetUniformLocation(context.prog_edge, "u_TexelSize"), 1.0f / context.width, 1.0f / context.height);
-    glUniform1f(glGetUniformLocation(context.prog_edge, "u_EdgeThreshold"), 0.01f);
-    glUniform4fv(glGetUniformLocation(context.prog_edge, "u_OutlineColor"), 1, glm::value_ptr(colorValues[GREEN]));
 
     glBindVertexArray(dummyVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -337,21 +328,17 @@ void draw_skybox(SceneContext& context)
 
     glDepthMask(GL_FALSE); // Disable depth writing for skybox
 
-    glUseProgram(context.prog_skybox);
-
-    // Set uniforms
-    GLuint u_projection = glGetUniformLocation(context.prog_skybox, "u_projection");
-    GLuint u_view = glGetUniformLocation(context.prog_skybox, "u_view");
-    glUniformMatrix4fv(u_projection, 1, GL_FALSE, glm::value_ptr(context.projection));
+    context.skybox_render->use();
+    context.skybox_render->setUniform("u_projection", context.projection);
 
     // Remove translation from view matrix for skybox (skybox should not move with camera position)
     glm::mat4 skyboxView = glm::mat4(glm::mat3(context.view));
-    glUniformMatrix4fv(u_view, 1, GL_FALSE, glm::value_ptr(skyboxView));
+    context.skybox_render->setUniform("u_view", skyboxView);
 
     // Bind cubemap texture
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, context.skyboxData.textureID);
-    glUniform1i(glGetUniformLocation(context.prog_skybox, "u_skybox"), 0);
+    context.skybox_render->setUniform("u_skybox", 0);
 
     glBindVertexArray(context.skyboxData.VAO);
     glDrawArrays(GL_TRIANGLES, 0, context.skyboxData.vertexCount);

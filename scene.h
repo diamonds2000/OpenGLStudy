@@ -4,6 +4,9 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include "render.h"
+#include "render_base.h"
+
+class RenderBase;
 
 struct CameraController {
     float yaw = 0.0f;
@@ -20,13 +23,14 @@ struct CameraController {
 struct SceneContext {
     int width = 0;
     int height = 0;
-    GLuint prog_main = 0;
-    GLuint prog_edge = 0;
-    GLuint prog_skybox = 0;
     GLuint fbo = 0;
     GLint u_mvp = 0;
     GLint u_view = 0;
     GLint u_light_dir = 0;
+    std::unique_ptr<RenderBase> scene_render;
+    std::unique_ptr<RenderBase> mirror_render;
+    std::unique_ptr<RenderBase> edge_render;
+    std::unique_ptr<RenderBase> skybox_render;
     glm::mat4 projection = glm::mat4(1.0f);
     glm::mat4 view = glm::mat4(1.0f);
     RenderData skyboxData;
