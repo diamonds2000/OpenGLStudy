@@ -6,6 +6,8 @@
 #include "render.h"
 #include "render_base.h"
 
+#include <memory>
+
 class RenderBase;
 
 struct CameraController {

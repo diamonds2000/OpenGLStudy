@@ -31,8 +31,6 @@ void RenderBase::use()
 GLuint RenderBase::create_program()
 {
     GLint ok;
-    GLuint prog;
-
     const char* vshader_src = m_vshader_src.c_str();
     const char* fshader_src = m_fshader_src.c_str();
 
