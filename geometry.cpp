@@ -21,7 +21,7 @@ RenderData create_triangle()
         1.0f, 0.0f,
         0.5f, 1.0f
     };
-    return create_render_data(vertices, normals, textCoords, 3);
+    return create_render_data(vertices, normals, textCoords, 3, false);
 }
 
 RenderData create_sphere(float radius, int slices, int stacks)
@@ -126,7 +126,7 @@ RenderData create_sphere(float radius, int slices, int stacks)
         }
     }
 
-    RenderData renderData = create_render_data(vertices, normals, textCoords, slices * stacks * 6);
+    RenderData renderData = create_render_data(vertices, normals, textCoords, slices * stacks * 6, false);
 
     delete[] vertices;
     delete[] normals;
@@ -134,7 +134,7 @@ RenderData create_sphere(float radius, int slices, int stacks)
     return renderData;
 }
 
-RenderData create_cube(float size)
+RenderData create_cube(float size, bool hasTangent)
 {
     // create vertices for the cube
     float half = size / 2.0f;
@@ -170,7 +170,7 @@ RenderData create_cube(float size)
         // front face (z = -half)
         { 0, 0, -1}, { 0, 0, -1}, { 0, 0, -1},
         { 0, 0, -1}, { 0, 0, -1}, { 0, 0, -1},
-        // back face (z = half)
+        // back face (z = half)hasTangent
         { 0, 0,  1}, { 0, 0,  1}, { 0, 0,  1},
         { 0, 0,  1}, { 0, 0,  1}, { 0, 0,  1},
         // left face (x = -half)
@@ -207,7 +207,7 @@ RenderData create_cube(float size)
         {1.0f, 1.0f}, {0.0f, 0.0f}, {0.0f, 1.0f}
     };
 
-    RenderData renderData = create_render_data((float*)&cubeVertices, (float*)&cubeNormals, (float*)&textCoordinates, 36);
+    RenderData renderData = create_render_data((float*)&cubeVertices, (float*)&cubeNormals, (float*)&textCoordinates, 36, hasTangent);
     return renderData;
 }
 

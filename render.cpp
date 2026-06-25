@@ -69,19 +69,53 @@ RenderData create_render_data(float* vertices, int count)
     return renderData;
 }
 
-RenderData create_render_data(float* vertices, float* normals, float* textCoords, int count)
+RenderData create_render_data(float* vertices, float* normals, float* textCoords, int count, bool hasTangent)
 {
-    float* data = new float[count * 8];
+    float* data = nullptr;
+    if (hasTangent)
+        data = new float[count * 11];
+    else
+        data = new float[count * 8];
+
+    int stride = hasTangent ? 11 : 8;
     for (int i = 0; i < count; ++i)
     {
-        data[i * 8  + 0] = vertices[i * 3 + 0];
-        data[i * 8 + 1] = vertices[i * 3 + 1];
-        data[i * 8 + 2] = vertices[i * 3 + 2];
-        data[i * 8 + 3] = normals[i * 3 + 0];
-        data[i * 8 + 4] = normals[i * 3 + 1];
-        data[i * 8 + 5] = normals[i * 3 + 2];
-        data[i * 8 + 6] = textCoords[i * 2 + 0];
-        data[i * 8 + 7] = textCoords[i * 2 + 1];
+        data[i * stride + 0] = vertices[i * 3 + 0];
+        data[i * stride + 1] = vertices[i * 3 + 1];
+        data[i * stride + 2] = vertices[i * 3 + 2];
+        data[i * stride + 3] = normals[i * 3 + 0];
+        data[i * stride + 4] = normals[i * 3 + 1];
+        data[i * stride + 5] = normals[i * 3 + 2];
+        data[i * stride + 6] = textCoords[i * 2 + 0];
+        data[i * stride + 7] = textCoords[i * 2 + 1];
+    }
+
+    if (hasTangent)
+    {
+        // compute tangent per triangle (non-indexed triangle list)
+        for (int i = 0; i < count; i += 3)
+        {
+            glm::vec3 edge1 = glm::vec3(vertices[(i+1) * 3 + 0] - vertices[i * 3 + 0],
+                                        vertices[(i+1) * 3 + 1] - vertices[i * 3 + 1],
+                                        vertices[(i+1) * 3 + 2] - vertices[i * 3 + 2]);
+            glm::vec3 edge2 = glm::vec3(vertices[(i+2) * 3 + 0] - vertices[i * 3 + 0],
+                                        vertices[(i+2) * 3 + 1] - vertices[i * 3 + 1],
+                                        vertices[(i+2) * 3 + 2] - vertices[i * 3 + 2]);
+            glm::vec2 deltaUV1 = glm::vec2(textCoords[(i+1) * 2 + 0] - textCoords[i * 2 + 0],
+                                           textCoords[(i+1) * 2 + 1] - textCoords[i * 2 + 1]);
+            glm::vec2 deltaUV2 = glm::vec2(textCoords[(i+2) * 2 + 0] - textCoords[i * 2 + 0],
+                                           textCoords[(i+2) * 2 + 1] - textCoords[i * 2 + 1]);
+            float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+            glm::vec3 tangent = (edge1 * deltaUV2.y - edge2 * deltaUV1.y) * r;
+
+            // assign same tangent to all 3 vertices of this triangle
+            for (int j = 0; j < 3; ++j)
+            {
+                data[(i + j) * stride + 8] = tangent.x;
+                data[(i + j) * stride + 9] = tangent.y;
+                data[(i + j) * stride + 10] = tangent.z;
+            }
+        }
     }
     
     RenderData renderData;
@@ -91,17 +125,23 @@ RenderData create_render_data(float* vertices, float* normals, float* textCoords
     glBindVertexArray(renderData.VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, renderData.VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * count * 8, data, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * count * stride, data, GL_STATIC_DRAW);
     renderData.vertexCount = count;
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);  // slot 0: position
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);  // slot 1: normal
 
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);  // slot 2: texture coordinates
+
+    if (hasTangent)
+    {
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride * sizeof(float), (void*)(8 * sizeof(float)));
+        glEnableVertexAttribArray(3);  // slot 3: tangent
+    }
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);

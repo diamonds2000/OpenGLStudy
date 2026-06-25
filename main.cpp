@@ -131,10 +131,12 @@ int main()
         update_view_from_camera(context);
 
         // Render OpenGL here
-        draw_skybox(context);
-        draw_scene_mirror(context);
+        //draw_skybox(context);
+        //draw_scene_mirror(context);
         //draw_edge(context);
-        copy_fbo_to_screen(context);
+        //copy_fbo_to_screen(context);
+
+        draw_geometries_with_normal_texture(context);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

@@ -20,14 +20,9 @@ GLuint create_fbo(GLuint width, GLuint height);
 
 RenderData create_render_data(float* vertices, int count);
 // Internal: create RenderData from flat vertex/normal arrays (count = number of vertices)
-RenderData create_render_data(float* vertices, float* normals, float* textCoords, int count);
+RenderData create_render_data(float* vertices, float* normals, float* textCoords, int count, bool hasTangent);
 
 GLuint create_texture(const char* imagePath);
-
-RenderData create_triangle();
-RenderData create_cube(float size);
-RenderData create_sphere(float radius, int slices, int stacks);
-RenderData create_bunny(const std::string& objPath);
 
 RenderData create_geometry_instances(
     const RenderData& baseData, 

@@ -6,6 +6,7 @@
 #include "render_mirror.h"
 #include "render_edge.h"
 #include "render_skybox.h"
+#include "render_normal_texture.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -32,6 +33,18 @@ const glm::vec4 colorValues[] = {
     glm::vec4(0.0f, 1.0f, 1.0f, 1.0f), // CYAN
     glm::vec4(1.0f, 0.0f, 1.0f, 1.0f)  // MAGENTA
 };
+
+std::vector<RenderData> create_normal_txt_geometries()
+{
+    std::vector<RenderData> renderDatas;
+
+    RenderData baseRenderData = create_cube(2.0f, true);
+    baseRenderData.textureID = create_texture("../textures/normal_texture.jpg");
+    assert(baseRenderData.textureID != 0);
+    renderDatas.push_back(baseRenderData);
+
+    return renderDatas;
+}
 
 std::vector<RenderData> create_geometries()
 {
@@ -152,7 +165,7 @@ SceneContext setup_scene(int width, int height)
     SceneContext context;
     context.width = width;
     context.height = height;
-    context.scene_render = std::make_unique<RenderMirror>();
+    context.scene_render = std::make_unique<RenderNormalTexture>();
     context.edge_render = std::make_unique<RenderEdge>();
     context.skybox_render = std::make_unique<RenderSkybox>();
     context.fbo = create_fbo(width, height);
@@ -170,9 +183,10 @@ SceneContext setup_scene(int width, int height)
     glm::vec3 up(0.0f, 1.0f, 0.0f);
     context.view = glm::lookAt(eye, center, up);
 
-    context.skyboxData = create_sky_box();
-    context.renderDatas.push_back(create_geometries_instances());
+    //context.skyboxData = create_sky_box();
+    //context.renderDatas.push_back(create_geometries_instances());
     //context.renderDatas = create_geometries();
+    context.renderDatas = create_normal_txt_geometries();
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -307,6 +321,30 @@ void draw_edge(SceneContext& context)
 
     // Re-enable depth test for next frame's scene rendering
     glEnable(GL_DEPTH_TEST);
+}
+
+void draw_geometries_with_normal_texture(SceneContext& context)
+{
+    context.scene_render->use();
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClearColor(0, 0, 0, 1.0f);
+
+    if (context.renderDatas.empty())
+        return;
+
+    context.scene_render->setUniform("u_projection", context.projection);
+    context.scene_render->setUniform("u_view", context.view);
+    context.scene_render->setUniform("u_color", glm::vec3(1.0f, 0.5f, 0.2f));
+    context.scene_render->setUniform("u_light_dir", glm::vec3(0.5f, 1.0f, 0.3f));
+    context.scene_render->setUniform("u_light_color", glm::vec3(1.0f, 1.0f, 1.0f));
+    context.scene_render->setUniform("u_normal_texture", 0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, context.renderDatas[0].textureID);
+
+    glBindVertexArray(context.renderDatas[0].VAO);
+    glDrawArrays(GL_TRIANGLES, 0, context.renderDatas[0].vertexCount);
+    glBindVertexArray(0);
 }
 
 void copy_fbo_to_screen(SceneContext& context)

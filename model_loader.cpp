@@ -169,7 +169,7 @@ RenderData create_from_obj(const std::string& filepath)
     }
 
     int vertexCount = static_cast<int>(verts.size() / 3);
-    RenderData rd = create_render_data(verts.data(), norms.data(), texCoords.data(), vertexCount);
+    RenderData rd = create_render_data(verts.data(), norms.data(), texCoords.data(), vertexCount, false);
 
     std::cout << "[OBJ] Loaded " << filepath << ": "
               << positions.size() << " unique vertices, "

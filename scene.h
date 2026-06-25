@@ -47,6 +47,8 @@ void draw_skybox(SceneContext& context);
 void draw_scene(SceneContext& context);
 void draw_scene_mirror(SceneContext& context);
 void draw_edge(SceneContext& context);
+void draw_geometries_with_normal_texture(SceneContext& context);
+
 void update_view_from_camera(SceneContext& context);
 
 void copy_fbo_to_screen(SceneContext& context);
