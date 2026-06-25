@@ -36,4 +36,7 @@ if (WIN32)
         COMPILE_FLAGS "/Od /Zi"
         LINK_FLAGS "/DEBUG /OPT:REF /OPT:ICF"
     )
+else()
+    string(REPLACE "-O3" "-O1" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -g")
 endif()
